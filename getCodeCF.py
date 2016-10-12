@@ -1,8 +1,8 @@
-#coding:utf-8
 from pyquery import PyQuery as pq
 import requests as req
 import time
 import json
+import os, os.path
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
@@ -74,15 +74,18 @@ def loadData(filename):
 	return data
 
 
-filename = 'Lab/sample.json'
+filename = 'data/sample.json'
 if __name__=='__main__':
 	user_list = loadData(filename)
 	source = {}
 	for user in user_list[:2]:
 		source[user] = recentSources(user, 2)
 
+	if not os.path.isdir('data'):
+		os.mkdir('data')
+
 	for user, src_list in source.items():
 		print('writing source of %s' % user)
 		for i, src in enumerate(src_list):
-			with open('Lab/src_%s_%d.txt' % (user, i), 'wb') as f:
+			with open('data/src_%s_%d.txt' % (user, i), 'wb') as f:
 				f.write(src.encode('utf-8'))
