@@ -87,16 +87,19 @@ def loadData(filename):
     return data
 
 
+def init():
+    if not os.path.isdir('data'):
+        os.mkdir('data')
+    
+
 filename = 'data/sample.json'
 if __name__ == '__main__':
-    getSampleUsers(2)
+    init()
+    
     user_list = loadData(filename)
     source = {}
     for user in user_list[:2]:
         source[user] = recentSources(user, 2)
-
-    if not os.path.isdir('data'):
-        os.mkdir('data')
 
     for user, src_list in source.items():
         print('writing source of %s' % user)
