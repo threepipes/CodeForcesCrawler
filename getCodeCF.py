@@ -6,6 +6,7 @@ import os, os.path
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
+userfile = 'data/users.json'
 
 rating = [
     2900,
@@ -26,8 +27,17 @@ def getData(api, option):
     return req.get(url+api, params=option).json()
 
 
-def getSampleUsers(n):
-    users = getData('user.ratedList', {'activeOnly': 'true'})
+def getUserData(option):
+    if not os.path.isfile(userfile):
+        users = getData('user.ratedList', {'activeOnly': 'true'})
+        saveAsJson(users, userfile)
+        return users
+    else:
+        return loadData(userfile)
+
+
+def getSampleUsers(n=10000000):
+    users = getUserData({'activeOnly': 'true'})
     user_list = []
     count = [0]*len(rating)
     idx = 0
@@ -53,6 +63,8 @@ def getSource(prob_id, contest_id):
     return dom.find('pre.prettyprint.program-source').text()
 
 
+# get recent n sources
+# return source list
 def recentSources(username, n):
     query = {
         'handle': username,
@@ -77,6 +89,7 @@ def loadData(filename):
 
 filename = 'data/sample.json'
 if __name__ == '__main__':
+    getSampleUsers(2)
     user_list = loadData(filename)
     source = {}
     for user in user_list[:2]:
