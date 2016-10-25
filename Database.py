@@ -54,5 +54,11 @@ class Database:
                 return False
         self.con.insert(user, 'UserTable')
 
-    def addFile(self, username, filename):
+    def addFile(self, username, filename, lang, verdict):
         self.con.insert({'file_name': filename, 'user_name': username}, 'FileTable')
+
+    def showUserTable(self):
+        self.con.show('UserTable')
+
+    def showFileTable(self):
+        self.con.show('FileTable')

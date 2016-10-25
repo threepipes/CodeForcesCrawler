@@ -95,7 +95,15 @@ def recentSources(username, n):
     for status in submissions:
         print('getting source id=%d' % status['id'])
         time.sleep(1)
-        source.append(getSource(status['id'], status['contestId']))
+        prob_id = status['id']
+        contest_id = status['contest_Id']
+        data = {}
+        data['source'] = getSource(prob_id, contest_id)
+        data['prob_id'] = prob_id
+        data['contest_id'] = contest_id
+        data['lang'] = status['programmingLanguage']
+        data['verdict'] = status['verdict']
+        source.append(data)
     return source
 
 
@@ -106,22 +114,40 @@ def loadData(filename):
     return data
 
 
+def saveFile(filename, content):
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+
 def init():
     if not os.path.isdir('data'):
         os.mkdir('data')
     
 
 filename = 'data/sample.json'
+userdata_format = {
+    'handle': 'user_name',
+    'rating': 'rating',
+    'maxRating': 'max_rating'
+}
 if __name__ == '__main__':
     init()
     
-    user_list = loadData(filename)
-    source = {}
-    for user in user_list[:2]:
-        source[user] = recentSources(user, 2)
+    user_list = getUsers(userdata_format, 10)
+    db = Database()
 
-    for user, src_list in source.items():
-        print('writing source of %s' % user)
-        for i, src in enumerate(src_list):
-            with open('data/src_%s_%d.txt' % (user, i), 'wb') as f:
-                f.write(src.encode('utf-8'))
+    for user in user_list[:2]:
+        db.addUser(user)
+        handle = user['user_name']
+        source = recentSources(handle, 2)
+        for src in source:
+            filename = '%s_%s_%s.src'
+            saveFile(filename, src['source'])
+            db.addFile(handle, filename, src['lang'], src['verdict'])
+
+    print('UserTable: ')
+    db.showUserTable()
+    print('FileTable: ')
+    db.showFileTable()
+
+    db.close()
