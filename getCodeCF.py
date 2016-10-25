@@ -21,6 +21,8 @@ rating = [
     0,
 ]
 
+inf = 10000000
+
 
 def getData(api, option):
     time.sleep(1)
@@ -36,7 +38,7 @@ def getUserData(option):
         return loadData(userfile)
 
 
-def getSampleUsers(n=10000000):
+def getSampleUsers(n=inf):
     users = getUserData({'activeOnly': 'true'})
     user_list = []
     count = [0]*len(rating)
@@ -50,6 +52,23 @@ def getSampleUsers(n=10000000):
             continue
         user_list.append(user['handle'])
         count[idx] += 1
+    return user_list
+
+
+def getUsers(datalist, n=inf):
+    users = getUserData({'activeOnly': 'true'})['result']
+    user_list = []
+    count = 0
+    for user in users:
+        count += 1
+        if count > n:
+            break
+        data = {}
+        for (cf_name, db_name) in datalist.items():
+            if not cf_name in user:
+                print('Wrong datalist. Key %s was not found' % cf_name)
+            data[db_name] = user[cf_name]
+        user_list.append(data)
     return user_list
 
 
