@@ -17,6 +17,7 @@ def getData(api, option):
     return req.get(url+api, params=option).json()
 
 
+# get user list from codeforces (consume some time)
 def getUserData(option):
     if not os.path.isfile(userfile):
         users = getData('user.ratedList', {'activeOnly': 'true'})
@@ -26,6 +27,7 @@ def getUserData(option):
         return loadData(userfile)
 
 
+# get n users with some information (currently: handle, rating, max_rating)
 def getUsers(datalist, n=inf):
     users = getUserData({'activeOnly': 'true'})['result']
     user_list = []
@@ -43,6 +45,7 @@ def getUsers(datalist, n=inf):
     return user_list
 
 
+# save json data as txt
 def saveAsJson(data, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(json.dumps(data))
@@ -104,10 +107,12 @@ userdata_format = {
 if __name__ == '__main__':
     init()
 
+    # get 10 users
     user_list = getUsers(userdata_format, 10)
     db = Database()
 
-    for user in user_list[:2]:
+    # from username, getting recent 2 source files and register to DB
+    for user in user_list:
         db.addUser(user)
         handle = user['user_name']
         source = recentSources(handle, 2)
@@ -116,6 +121,7 @@ if __name__ == '__main__':
             saveFile('data/'+filename, src['source'])
             db.addFile(handle, filename, src['lang'], src['verdict'])
 
+    # show DB tables
     print('UserTable: ')
     db.showUserTable()
     print('FileTable: ')
