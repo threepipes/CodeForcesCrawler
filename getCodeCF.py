@@ -9,19 +9,6 @@ base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
 userfile = 'data/users.json'
 
-rating = [
-    2900,
-    2600,
-    2400,
-    2300,
-    2200,
-    1900,
-    1600,
-    1400,
-    1200,
-    0,
-]
-
 inf = 10000000
 
 
@@ -37,23 +24,6 @@ def getUserData(option):
         return users
     else:
         return loadData(userfile)
-
-
-def getSampleUsers(n=inf):
-    users = getUserData({'activeOnly': 'true'})
-    user_list = []
-    count = [0]*len(rating)
-    idx = 0
-    for user in users['result']:
-        if user['rating'] < rating[idx]:
-            idx += 1
-        if idx >= len(rating):
-            break
-        if count[idx] >= n:
-            continue
-        user_list.append(user['handle'])
-        count[idx] += 1
-    return user_list
 
 
 def getUsers(datalist, n=inf):
