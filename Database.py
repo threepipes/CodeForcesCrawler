@@ -1,6 +1,17 @@
 import mysql.connector as mc
 
 
+def mapToStr(data, separator=',', connector='='):
+    result = ''
+    for (key, value) in data.items():
+        if type(value) is str:
+            v = "'%s'" % value
+        else:
+            v = str(value)
+        result += '%s%s%s%s' % (key, connector, v, separator)
+    return result[:-1]
+
+
 class Connector:
     def __init__(self):
         self.connector = mc.connect(
@@ -12,8 +23,18 @@ class Connector:
 
         self.cur = self.connector.cursor()
 
+    def createDB(self, dbname, drop=False):
+        if drop:
+            self.cur.execute('DROP DATABASE IF EXISTS %s' % dbname)
+            self.cur.execute('CREATE DATABASE %s' % dbname)
+        else:
+            self.cur.execute('CREATE DATABASE %s' % dbname)
+
+    def createTable(self, tablename, data, drop=False):
+        pass
+
     def show(self, table):
-        self.cur.execute('')
+        self.connector.commit()
         self.cur.execute('SELECT * FROM %s' % table)
         result = self.cur.fetchall()
         for row in result:
@@ -21,22 +42,36 @@ class Connector:
 
     def insert(self, data, table):
         """data must be dict {DATA_NAME=DATA}"""
-        dataname = ''
-        values = ''
-        for (key, value) in data.items():
-            dataname += key + ','
-            values += value + ','
+        dataname = ','.join(data.keys())
+        values = tuple(data.values())
+        holder = ','.join(['%s']*len(values))
 
-        statement = 'INSERT INTO %s (%s) VALUES (%s)' % (table, dataname[:-1], values[:-1])
+        statement = 'INSERT INTO %s (%s) VALUES (%s)' % (table, dataname, holder)
+        self.cur.execute(statement, values)
+
+    def update(self, data, table, key):
+        changes = mapToStr(data)
+        select_key = mapToStr(key)
+        statement = 'UPDATE %s SET %s WHERE %s' % (table, changes, select_key)
         self.cur.execute(statement)
 
+    def existKey(self, table, key_name, value):
+        self.connector.commit()
+        statement = 'SELECT %s FROM %s WHERE %s=%%s' % (key_name, table, key_name)
+        self.cur.execute(statement, (value,))
+        result = self.cur.fetchall()
+        return len(result) > 0
+
     def close(self):
-        self.cur.close
-        self.connector.close
+        self.connector.commit()
+        self.cur.close()
+        self.connector.close()
 
 
 class Database:
     user_data = ['user_name', 'rating', 'max_rating']
+    user_table = 'UserTable'
+    file_table = 'FileTable'
 
     def __init__(self):
         self.con = Connector()
@@ -52,13 +87,24 @@ class Database:
             if not key in user:
                 print('Failed to add user. Lack of %d' % key)
                 return False
-        self.con.insert(user, 'UserTable')
+        table_key = self.user_data[0]
+        if self.con.existKey(self.user_table, table_key, user[table_key]):
+            self.con.update(user, self.user_table, {table_key: user[table_key]})
+        else:
+            self.con.insert(user, self.user_table)
 
     def addFile(self, username, filename, lang, verdict):
-        self.con.insert({'file_name': filename, 'user_name': username}, 'FileTable')
+        data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict}
+        if not self.con.existKey(self.file_table, 'file_name', filename):
+     #       self.con.update(data, self.file_table, {'file_name': filename})
+     #   else:
+            self.con.insert(data, self.file_table)
 
     def showUserTable(self):
-        self.con.show('UserTable')
+        self.con.show(self.user_table)
 
     def showFileTable(self):
-        self.con.show('FileTable')
+        self.con.show(self.file_table)
+
+    def close(self):
+        self.con.close()

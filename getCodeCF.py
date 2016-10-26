@@ -3,6 +3,7 @@ import requests as req
 import time
 import json
 import os, os.path
+from Database import Database
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
@@ -96,7 +97,7 @@ def recentSources(username, n):
         print('getting source id=%d' % status['id'])
         time.sleep(1)
         prob_id = status['id']
-        contest_id = status['contest_Id']
+        contest_id = status['contestId']
         data = {}
         data['source'] = getSource(prob_id, contest_id)
         data['prob_id'] = prob_id
@@ -122,7 +123,7 @@ def saveFile(filename, content):
 def init():
     if not os.path.isdir('data'):
         os.mkdir('data')
-    
+
 
 filename = 'data/sample.json'
 userdata_format = {
@@ -132,7 +133,7 @@ userdata_format = {
 }
 if __name__ == '__main__':
     init()
-    
+
     user_list = getUsers(userdata_format, 10)
     db = Database()
 
@@ -141,8 +142,8 @@ if __name__ == '__main__':
         handle = user['user_name']
         source = recentSources(handle, 2)
         for src in source:
-            filename = '%s_%s_%s.src'
-            saveFile(filename, src['source'])
+            filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
+            saveFile('data/'+filename, src['source'])
             db.addFile(handle, filename, src['lang'], src['verdict'])
 
     print('UserTable: ')

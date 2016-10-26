@@ -8,5 +8,7 @@ PRIMARY KEY(user_name)
 CREATE TABLE FileTable(
 file_name VARCHAR(30),
 user_name VARCHAR(30),
+lang VARCHAR(20),
+verdict VARCHAR(20),
 PRIMARY KEY(file_name)
 );
