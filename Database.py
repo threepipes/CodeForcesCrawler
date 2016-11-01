@@ -28,10 +28,20 @@ class Connector:
             self.cur.execute('DROP DATABASE IF EXISTS %s' % dbname)
             self.cur.execute('CREATE DATABASE %s' % dbname)
         else:
-            self.cur.execute('CREATE DATABASE %s' % dbname)
+            self.cur.execute('CREATE DATABASE IF NOT EXISTS %s' % dbname)
 
-    def createTable(self, tablename, data, drop=False):
-        pass
+    def createTable(self, tablename, data, primary_key=None, drop=False):
+        tabledata = []
+        for name, typename in data.items():
+            tabledata.append(' %s %s' % (name, typename))
+        if not primary_key is None:
+            tabledata.append(' PRIMARY KEY(%s)' % primary_key)
+        statement = ',\n'.join(tabledata)
+        if drop:
+            self.cur.execute('DROP TABLE IF EXISTS %s' % tablename)
+            self.cur.execute('CREATE TABLE %s(\n%s\n)' % (tablename, statement))
+        else:
+            self.cur.execute('CREATE TABLE IF NOT EXISTS %s(\n%s\n)' % (tablename, statement))
 
     def show(self, table):
         self.connector.commit()
@@ -108,3 +118,19 @@ class Database:
 
     def close(self):
         self.con.close()
+
+    def initTables(self):
+        usertable = {
+            'user_name': 'VARCHAR(30)',
+            'rating': 'INT(4)',
+            'max_rating': 'INT(4)'
+        }
+        self.con.createTable('UserTable', usertable, primary_key='user_name')
+
+        filetable = {
+            'file_name': 'VARCHAR(30)',
+            'user_name': 'VARCHAR(30)',
+            'lang': 'VARCHAR(20)',
+            'verdict': 'VARCHAR(20)'
+        }
+        self.con.createTable('FileTable', filetable, primary_key='file_name')
