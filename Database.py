@@ -1,6 +1,7 @@
 import mysql.connector as mc
 
 
+# TODO use join with array
 def mapToStr(data, separator=',', connector='='):
     result = ''
     for (key, value) in data.items():

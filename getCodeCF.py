@@ -98,6 +98,7 @@ def init():
         os.mkdir('data')
 
 
+
 filename = 'data/sample.json'
 userdata_format = {
     'handle': 'user_name',
@@ -108,8 +109,9 @@ if __name__ == '__main__':
     init()
 
     # get 10 users
-    user_list = getUsers(userdata_format, 10)
+    user_list = getUsers(userdata_format, 5)
     db = Database()
+    db.initTables()
 
     # from username, getting recent 2 source files and register to DB
     for user in user_list:
