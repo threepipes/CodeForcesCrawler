@@ -51,13 +51,15 @@ class Connector:
         for row in result:
             print(row)
 
-    def insert(self, data, table):
+    def insert(self, data, table, update=False):
         """data must be dict {DATA_NAME=DATA}"""
         dataname = ','.join(data.keys())
         values = tuple(data.values())
         holder = ','.join(['%s']*len(values))
 
         statement = 'INSERT INTO %s (%s) VALUES (%s)' % (table, dataname, holder)
+        if update:
+            statement += ' ON DUPLICATE KEY UPDATE'
         self.cur.execute(statement, values)
 
     def update(self, data, table, key):
@@ -72,6 +74,17 @@ class Connector:
         self.cur.execute(statement, (value,))
         result = self.cur.fetchall()
         return len(result) > 0
+
+    def count(self, table, where=None):
+        self.connector.commit()
+        statement = 'SELECT COUNT(*) FROM %s'
+        if not where is None:
+            condition = []
+            for (key, value) in where.items():
+                condition.append("%s='%s'" % (key, value))
+            statement += ' WHERE %s' % ' and '.join(condition)
+        self.cur.execute(statement)
+        return self.cur.fetchall()
 
     def close(self):
         self.connector.commit()
@@ -106,9 +119,9 @@ class Database:
 
     def addFile(self, username, filename, lang, verdict):
         data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict}
-        if not self.con.existKey(self.file_table, 'file_name', filename):
-     #       self.con.update(data, self.file_table, {'file_name': filename})
-     #   else:
+        if self.con.existKey(self.file_table, 'file_name', filename):
+            self.con.update(data, self.file_table, {'file_name': filename})
+        else:
             self.con.insert(data, self.file_table)
 
     def showUserTable(self):
@@ -129,7 +142,7 @@ class Database:
         self.con.createTable('UserTable', usertable, primary_key='user_name')
 
         filetable = {
-            'file_name': 'VARCHAR(30)',
+            'file_name': 'VARCHAR(50)',
             'user_name': 'VARCHAR(30)',
             'lang': 'VARCHAR(20)',
             'verdict': 'VARCHAR(20)'

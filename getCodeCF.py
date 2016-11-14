@@ -52,25 +52,30 @@ def saveAsJson(data, filename):
 
 
 def getSource(prob_id, contest_id):
+    time.sleep(1)
     dom = pq(base_url + 'contest/%d/submission/%d' % (contest_id, prob_id))
     return dom.find('pre.prettyprint.program-source').text()
 
 
-def getSourceData(status):
+def getSourceData(status, src=True):
     prob_id = status['id']
     contest_id = status['contestId']
     data = {}
-    data['source'] = getSource(prob_id, contest_id)
+    if src:
+        data['source'] = getSource(prob_id, contest_id)
     data['prob_id'] = prob_id
     data['contest_id'] = contest_id
     data['lang'] = status['programmingLanguage']
-    data['verdict'] = status['verdict']
+    if 'verdict' in status:
+        data['verdict'] = status['verdict'][:20]
+    else:
+        data['verdict'] = '-'
     return data
 
 
 # get recent n sources
 # return source list (which creationTimeSeconds is larger than "time")
-def recentSources(username, n=inf, time_border=0):
+def recentSources(username, n=inf, time_border=0, src=True):
     query = {
         'handle': username,
         'count': n
@@ -81,9 +86,8 @@ def recentSources(username, n=inf, time_border=0):
     for status in submissions:
         if status['creationTimeSeconds'] < time_border:
             break
-        print('getting source id=%d' % status['id'])
-        time.sleep(1)
-        source.append(getSourceData(status))
+        # print('getting source id=%d' % status['id'])
+        source.append(getSourceData(status, src))
     return source
 
 
@@ -106,7 +110,7 @@ def init():
 
 month_before = 6
 def getLeastTime():
-    sec = time.time() - 24*60*60
+    sec = time.time() - month_before*30*24*60*60
     return int(sec)
 
 
@@ -127,19 +131,20 @@ if __name__ == '__main__':
     border = getLeastTime()
 
     # from username, getting recent 2 source files and register to DB
-    for user in user_list[1000:1005]:
+    for user in user_list[-500:]:
         db.addUser(user)
         handle = user['user_name']
-        source = recentSources(handle, time_border=border)
+        source = recentSources(handle, time_border=border, src=False)
         for src in source:
             filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
-            saveFile('data/'+filename, src['source'])
+            if 'source' in src:
+                saveFile('data/'+filename, src['source'])
             db.addFile(handle, filename, src['lang'], src['verdict'])
 
     # show DB tables
-    print('UserTable: ')
-    db.showUserTable()
-    print('FileTable: ')
-    db.showFileTable()
+    # print('UserTable: ')
+    # db.showUserTable()
+    # print('FileTable: ')
+    # db.showFileTable()
 
     db.close()
