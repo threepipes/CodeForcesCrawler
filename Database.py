@@ -51,6 +51,18 @@ class Connector:
         for row in result:
             print(row)
 
+    def get(self, table, col):
+        self.connector.commit()
+        self.cur.execute('SELECT %s FROM %s' % (','.join(col), table))
+        result = self.cur.fetchall()
+        res = []
+        for row in result:
+            mp = {}
+            for key, value in zip(col, row):
+                mp[key] = value
+            res.append(mp)
+        return res
+
     def insert(self, data, table, update=False):
         """data must be dict {DATA_NAME=DATA}"""
         dataname = ','.join(data.keys())
@@ -77,14 +89,14 @@ class Connector:
 
     def count(self, table, where=None):
         self.connector.commit()
-        statement = 'SELECT COUNT(*) FROM %s'
+        statement = 'SELECT COUNT(*) FROM ' + table
         if not where is None:
             condition = []
             for (key, value) in where.items():
                 condition.append("%s='%s'" % (key, value))
             statement += ' WHERE %s' % ' and '.join(condition)
         self.cur.execute(statement)
-        return self.cur.fetchall()
+        return self.cur.fetchall()[0][0]
 
     def close(self):
         self.connector.commit()
@@ -148,3 +160,18 @@ class Database:
             'verdict': 'VARCHAR(20)'
         }
         self.con.createTable('FileTable', filetable, primary_key='file_name')
+
+if __name__ == '__main__':
+    con = Connector()
+    table = 'usertable'
+    userlist = con.get(table, ['user_name', 'rating'])
+    stat = []
+    for user in userlist:
+        data = [user['user_name'], user['rating']]
+        data.append(con.count('filetable', {'user_name':data[0]}))
+        data.append(con.count('filetable', {'user_name':data[0], 'verdict':'OK'}))
+        stat.append(data)
+    with open('data.csv', 'w') as f:
+        f.write('username, rating, submitted(in recent 6 month), ac/all\n')
+        for row in stat:
+            f.write(','.join(map(str, row)) + '\n')

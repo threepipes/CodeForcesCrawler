@@ -131,7 +131,7 @@ if __name__ == '__main__':
     border = getLeastTime()
 
     # from username, getting recent 2 source files and register to DB
-    for user in user_list[-500:]:
+    for user in user_list[:3]:
         db.addUser(user)
         handle = user['user_name']
         source = recentSources(handle, time_border=border, src=False)
