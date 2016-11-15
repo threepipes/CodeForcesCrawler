@@ -9,7 +9,7 @@ base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
 userfile = 'data/users.json'
 
-inf = 10000000
+inf = 2000000000
 
 
 def getData(api, option):
@@ -75,7 +75,7 @@ def getSourceData(status, src=True):
 
 # get recent n sources
 # return source list (which creationTimeSeconds is larger than "time")
-def recentSources(username, n=inf, time_border=0, src=True):
+def recentSources(username, n=inf, time_from=0, time_end=inf, src=True):
     query = {
         'handle': username,
         'count': n
@@ -84,8 +84,10 @@ def recentSources(username, n=inf, time_border=0, src=True):
     source = []
     print("%s's source" % username)
     for status in submissions:
-        if status['creationTimeSeconds'] < time_border:
+        if status['creationTimeSeconds'] < time_from:
             break
+        if status['creationTimeSeconds'] > time_end:
+            continue
         # print('getting source id=%d' % status['id'])
         source.append(getSourceData(status, src))
     return source
@@ -109,8 +111,9 @@ def init():
 
 
 month_before = 6
+end = 1479181649
 def getLeastTime():
-    sec = time.time() - month_before*30*24*60*60
+    sec = end - month_before*30*24*60*60
     return int(sec)
 
 
@@ -131,10 +134,10 @@ if __name__ == '__main__':
     border = getLeastTime()
 
     # from username, getting recent 2 source files and register to DB
-    for user in user_list[:3]:
+    for user in user_list[:500]:
         db.addUser(user)
         handle = user['user_name']
-        source = recentSources(handle, time_border=border, src=False)
+        source = recentSources(handle, time_from=border, time_end=end, src=False)
         for src in source:
             filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
             if 'source' in src:

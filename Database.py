@@ -170,8 +170,10 @@ if __name__ == '__main__':
         data = [user['user_name'], user['rating']]
         data.append(con.count('filetable', {'user_name':data[0]}))
         data.append(con.count('filetable', {'user_name':data[0], 'verdict':'OK'}))
-        stat.append(data)
+        if data[2]>0:
+            data.append(data[3]/data[2])
+            stat.append(data)
     with open('data.csv', 'w') as f:
-        f.write('username, rating, submitted(in recent 6 month), ac/all\n')
+        f.write('username, rating, submitted(recent 6 month), ac, ac/all\n')
         for row in stat:
             f.write(','.join(map(str, row)) + '\n')
