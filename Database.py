@@ -189,7 +189,7 @@ class Database:
         return True
 
     def getSampleFilenames(self):
-        result = self.con.innerJoin(self.sample_user_table, self.user_table, ['file_name'], 'user_name')
+        result = self.con.innerJoin(self.sample_user_table, self.file_table, ['file_name'], 'user_name')
         filenames = list(map(lambda x: x[0], result))
         return filenames
 

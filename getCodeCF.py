@@ -53,9 +53,6 @@ def setSubmissionHistory(db, users, time_from, time_end):
             db.addFile(handle, filename, src['lang'], src['verdict'])
 
 
-def getSourceInDB(db):
-    pass
-
 # get n users with some information (currently: handle, rating, max_rating)
 def getUsers(datalist, n=inf):
     users = getUserData({'activeOnly': 'true'})['result']
@@ -147,6 +144,14 @@ def getLeastTime():
     return int(sec)
 
 
+idx_file = 'data/lastIdx.dat'
+def last():
+    idx = 0
+    with open(idx_file) as f:
+        idx = int(f.read().strip())
+    return idx
+
+
 filename = 'data/sample.json'
 userdata_format = {
     'handle': 'user_name',
@@ -154,20 +159,23 @@ userdata_format = {
     'maxRating': 'max_rating'
 }
 if __name__ == '__main__':
-    init()
 
-    # get 1000 sample users
-    user_list = getSampleUsers(userdata_format, 1000)
     db = Database()
-
-    border = getLeastTime()
-
-    setSubmissionHistory(db, user_list, border, end)
-
-    # show DB tables
-    # print('UserTable: ')
-    # db.showUserTable()
-    # print('FileTable: ')
-    # db.showFileTable()
+    filenames = db.getSampleFilenames()
+    idx = last()
+    length = len(filenames)
+    try:
+        for filename in filenames[idx:]:
+            print('%d/%d' % (idx+1, length))
+            items = filename[:-4].split('_')
+            source = getSource(int(items[1]), int(items[2]))
+            saveFile('data/src/'+filename, source)
+            idx += 1
+    except:
+        print('Error in idx: '+str(idx))
+        saveFile(idx_file, str(idx))
+        raise
+    finally:
+        print('Completed!')
 
     db.close()
