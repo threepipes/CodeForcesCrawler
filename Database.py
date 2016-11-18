@@ -51,6 +51,13 @@ class Connector:
         for row in result:
             print(row)
 
+    def innerJoin(self, table_base, table_into, col, join_key):
+        cols = ','.join(col)
+        strs = (cols, table_base, table_into, table_base, join_key, table_into, join_key)
+        statement = 'SELECT %s FROM %s INNER JOIN %s ON %s.%s = %s.%s' % strs
+        self.cur.execute(statement)
+        return self.cur.fetchall()
+
     def get(self, table, col):
         self.connector.commit()
         self.cur.execute('SELECT %s FROM %s' % (','.join(col), table))
@@ -104,9 +111,10 @@ class Connector:
         self.connector.close()
 
     def existTable(self, table):
-        con.cur.execute('SHOW TABLES')
-        tables = con.cur.fetchall()
+        self.cur.execute('SHOW TABLES')
+        tables = self.cur.fetchall()
         return (table,) in tables
+
 
 class Database:
     user_data = ['user_name', 'rating', 'max_rating']
@@ -180,6 +188,11 @@ class Database:
         self.con.createTable(self.sample_user_table, sampletable, primary_key='user_name')
         return True
 
+    def getSampleFilenames(self):
+        result = self.con.innerJoin(self.sample_user_table, self.user_table, ['file_name'], 'user_name')
+        filenames = list(map(lambda x: x[0], result))
+        return filenames
+
 if __name__ == '__main__':
     con = Connector()
     table = 'usertable'
@@ -189,7 +202,7 @@ if __name__ == '__main__':
         data = [user['user_name'], user['rating']]
         data.append(con.count('filetable', {'user_name':data[0]}))
         data.append(con.count('filetable', {'user_name':data[0], 'verdict':'OK'}))
-        if data[2]>0:
+        if data[2] > 0:
             data.append(data[3]/data[2])
             stat.append(data)
     with open('data.csv', 'w') as f:

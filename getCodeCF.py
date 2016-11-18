@@ -11,8 +11,8 @@ url = base_url + 'api/'
 userfile = 'data/users.json'
 samplefile = 'data/sampleUsers.json'
 
-inf = 2000000000
-
+inf = 1000000000
+time_inf = inf*2
 
 def getData(api, option):
     time.sleep(1)
@@ -34,23 +34,27 @@ def getSampleUsers(datalist, n):
         user_list = getUsers(datalist)
         sample_list = random.sample(user_list, n)
         saveAsJson(sample_list, samplefile)
+        print('saved sample users')
         return sample_list
     else:
         return loadData(samplefile)
 
 
 def setSubmissionHistory(db, users, time_from, time_end):
-    if not db.createSampleTableIfNotExists():
-        return
+    db.createSampleTableIfNotExists()
+    print('start getting submissions')
     for user in users:
         db.addUser(user)
         handle = user['user_name']
-        source = recentSources(handle, time_from, time_end, src=False)
+        source = recentSources(handle, time_from=time_from, time_end=time_end, src=False)
         db.addSampleUser(handle, len(source))
         for src in source:
             filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
             db.addFile(handle, filename, src['lang'], src['verdict'])
 
+
+def getSourceInDB(db):
+    pass
 
 # get n users with some information (currently: handle, rating, max_rating)
 def getUsers(datalist, n=inf):
@@ -100,12 +104,13 @@ def getSourceData(status, src=True):
 
 # get recent n sources
 # return source list (which creationTimeSeconds is larger than "time")
-def recentSources(username, n=inf, time_from=0, time_end=inf, src=True):
+def recentSources(username, n=inf, time_from=0, time_end=time_inf, src=True):
     query = {
         'handle': username,
         'count': n
     }
-    submissions = getData('user.status', query)['result']
+    response = getData('user.status', query)
+    submissions = response['result']
     source = []
     print("%s's source" % username)
     for status in submissions:
@@ -151,23 +156,13 @@ userdata_format = {
 if __name__ == '__main__':
     init()
 
-    # get 10 users
-    user_list = getUsers(userdata_format)
+    # get 1000 sample users
+    user_list = getSampleUsers(userdata_format, 1000)
     db = Database()
-    db.initTables()
 
     border = getLeastTime()
 
-    # from username, getting recent 2 source files and register to DB
-    for user in user_list[:500]:
-        db.addUser(user)
-        handle = user['user_name']
-        source = recentSources(handle, time_from=border, time_end=end, src=False)
-        for src in source:
-            filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
-            if 'source' in src:
-                saveFile('data/'+filename, src['source'])
-            db.addFile(handle, filename, src['lang'], src['verdict'])
+    setSubmissionHistory(db, user_list, border, end)
 
     # show DB tables
     # print('UserTable: ')
