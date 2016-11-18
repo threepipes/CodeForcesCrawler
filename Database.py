@@ -103,11 +103,16 @@ class Connector:
         self.cur.close()
         self.connector.close()
 
+    def existTable(self, table):
+        con.cur.execute('SHOW TABLES')
+        tables = con.cur.fetchall()
+        return (table,) in tables
 
 class Database:
     user_data = ['user_name', 'rating', 'max_rating']
     user_table = 'UserTable'
     file_table = 'FileTable'
+    sample_user_table = 'SampleUserTable'
 
     def __init__(self):
         self.con = Connector()
@@ -136,6 +141,10 @@ class Database:
         else:
             self.con.insert(data, self.file_table)
 
+    def addSampleUser(self, username, files):
+        data = {'user_name': username, 'files': files}
+        self.con.insert(data, self.sample_user_table)
+
     def showUserTable(self):
         self.con.show(self.user_table)
 
@@ -160,6 +169,16 @@ class Database:
             'verdict': 'VARCHAR(20)'
         }
         self.con.createTable('FileTable', filetable, primary_key='file_name')
+
+    def createSampleTableIfNotExists(self):
+        if self.con.existTable(self.sample_user_table):
+            return False
+        sampletable = {
+            'user_name': 'VARCHAR(30)',
+            'files': 'INT(4)'
+        }
+        self.con.createTable(self.sample_user_table, sampletable, primary_key='user_name')
+        return True
 
 if __name__ == '__main__':
     con = Connector()

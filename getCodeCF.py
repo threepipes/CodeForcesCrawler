@@ -4,10 +4,12 @@ import time
 import json
 import os, os.path
 from Database import Database
+import random
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
 userfile = 'data/users.json'
+samplefile = 'data/sampleUsers.json'
 
 inf = 2000000000
 
@@ -25,6 +27,29 @@ def getUserData(option):
         return users
     else:
         return loadData(userfile)
+
+
+def getSampleUsers(datalist, n):
+    if not os.path.isfile(samplefile):
+        user_list = getUsers(datalist)
+        sample_list = random.sample(user_list, n)
+        saveAsJson(sample_list, samplefile)
+        return sample_list
+    else:
+        return loadData(samplefile)
+
+
+def setSubmissionHistory(db, users, time_from, time_end):
+    if not db.createSampleTableIfNotExists():
+        return
+    for user in users:
+        db.addUser(user)
+        handle = user['user_name']
+        source = recentSources(handle, time_from, time_end, src=False)
+        db.addSampleUser(handle, len(source))
+        for src in source:
+            filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
+            db.addFile(handle, filename, src['lang'], src['verdict'])
 
 
 # get n users with some information (currently: handle, rating, max_rating)
