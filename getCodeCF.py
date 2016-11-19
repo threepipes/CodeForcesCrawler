@@ -167,6 +167,9 @@ if __name__ == '__main__':
         length = len(filenames)
         try:
             for filename in filenames[idx:]:
+                if os.path.isfile('data/src/'+filename):
+                    idx += 1
+                    continue
                 print('%d/%d' % (idx+1, length))
                 items = filename[:-4].split('_')
                 source = getSource(int(items[-2]), int(items[-1]))
