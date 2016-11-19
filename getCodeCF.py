@@ -163,19 +163,19 @@ if __name__ == '__main__':
     db = Database()
     filenames = db.getSampleFilenames()
     idx = last()
-    length = len(filenames)
-    try:
-        for filename in filenames[idx:]:
-            print('%d/%d' % (idx+1, length))
-            items = filename[:-4].split('_')
-            source = getSource(int(items[-2]), int(items[-1]))
-            saveFile('data/src/'+filename, source)
-            idx += 1
-    except:
-        print('Error in idx: '+str(idx))
-        saveFile(idx_file, str(idx))
-        raise
-    finally:
-        print('Completed!')
+    while True:
+        length = len(filenames)
+        try:
+            for filename in filenames[idx:]:
+                print('%d/%d' % (idx+1, length))
+                items = filename[:-4].split('_')
+                source = getSource(int(items[-2]), int(items[-1]))
+                saveFile('data/src/'+filename, source)
+                idx += 1
+        except Exception:
+            print('Error in idx: '+str(idx))
+            saveFile(idx_file, str(idx))
+            raise
+        time.sleep(15)
 
     db.close()
