@@ -175,7 +175,7 @@ if __name__ == '__main__':
                 source = getSource(int(items[-2]), int(items[-1]))
                 saveFile('data/src/'+filename, source)
                 idx += 1
-        except Exception:
+        except:
             print('Error in idx: '+str(idx))
             saveFile(idx_file, str(idx))
             raise
