@@ -178,7 +178,6 @@ if __name__ == '__main__':
         except:
             print('Error in idx: '+str(idx))
             saveFile(idx_file, str(idx))
-            raise
         time.sleep(15)
 
     db.close()

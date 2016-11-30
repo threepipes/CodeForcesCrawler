@@ -3,14 +3,14 @@ import mysql.connector as mc
 
 # TODO use join with array
 def mapToStr(data, separator=',', connector='='):
-    result = ''
+    result = []
     for (key, value) in data.items():
         if type(value) is str:
             v = "'%s'" % value
         else:
             v = str(value)
-        result += '%s%s%s%s' % (key, connector, v, separator)
-    return result[:-1]
+        result.append('%s%s%s' % (key, connector, v))
+    return separator.join(result)
 
 
 class Connector:
@@ -58,9 +58,12 @@ class Connector:
         self.cur.execute(statement)
         return self.cur.fetchall()
 
-    def get(self, table, col):
+    def get(self, table, col, where=None):
         self.connector.commit()
-        self.cur.execute('SELECT %s FROM %s' % (','.join(col), table))
+        where_sentence = ''
+        if not where is None:
+            where_sentence = ' ' + mapToStr(where, separator=' and ')
+        self.cur.execute('SELECT %s FROM %s%s' % (','.join(col), table, where_sentence))
         result = self.cur.fetchall()
         res = []
         for row in result:
