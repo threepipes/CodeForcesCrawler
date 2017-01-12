@@ -97,6 +97,7 @@ def getSourceData(status, src=True):
     data['prob_id'] = prob_id
     data['contest_id'] = contest_id
     data['lang'] = status['programmingLanguage']
+    data['timestamp'] = status['creationTimeSeconds']
     if 'verdict' in status:
         data['verdict'] = status['verdict'][:20]
     else:

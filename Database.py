@@ -149,8 +149,8 @@ class Database:
         else:
             self.con.insert(user, self.user_table)
 
-    def addFile(self, username, filename, lang, verdict):
-        data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict}
+    def addFile(self, username, filename, lang, verdict, timestamp):
+        data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict, 'timestamp': timestamp}
         if self.con.existKey(self.file_table, 'file_name', filename):
             self.con.update(data, self.file_table, {'file_name': filename})
         else:
@@ -184,7 +184,8 @@ class Database:
             'file_name': 'VARCHAR(50)',
             'user_name': 'VARCHAR(30)',
             'lang': 'VARCHAR(20)',
-            'verdict': 'VARCHAR(20)'
+            'verdict': 'VARCHAR(20)',
+            'timestamp': 'BIGINT UNSIGNED'
         }
         self.con.createTable('FileTable', filetable, primary_key='file_name')
 
