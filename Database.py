@@ -58,12 +58,16 @@ class Connector:
         self.cur.execute(statement)
         return self.cur.fetchall()
 
-    def get(self, table, col, where=None):
+    def get(self, table, col, where=None, limit=-1):
         self.connector.commit()
         where_sentence = ''
+        limit_sentence = ''
+        if limit > 0:
+            limit_sentence = ' LIMIT ' + str(limit)
         if not where is None:
-            where_sentence = ' ' + mapToStr(where, separator=' and ')
-        self.cur.execute('SELECT %s FROM %s%s' % (','.join(col), table, where_sentence))
+            where_sentence = ' WHERE ' + mapToStr(where, separator=' and ')
+        sentence = 'SELECT %s FROM %s%s%s' % (','.join(col), table, where_sentence, limit_sentence)
+        self.cur.execute(sentence)
         result = self.cur.fetchall()
         res = []
         for row in result:
@@ -156,6 +160,9 @@ class Database:
         data = {'user_name': username, 'files': files}
         self.con.insert(data, self.sample_user_table)
 
+    def getSampleUsers(self):
+        return self.con.get(self.sample_user_table, ['user_name'])
+
     def showUserTable(self):
         self.con.show(self.user_table)
 
@@ -202,13 +209,13 @@ if __name__ == '__main__':
     userlist = con.get(table, ['user_name', 'rating'])
     stat = []
     for user in userlist:
-        data = [user['user_name'], user['rating']]
-        data.append(con.count('filetable', {'user_name':data[0]}))
-        data.append(con.count('filetable', {'user_name':data[0], 'verdict':'OK'}))
-        if data[2] > 0:
-            data.append(data[3]/data[2])
-            stat.append(data)
-    with open('data.csv', 'w') as f:
+        data = ['"%s"' % user['user_name'], user['rating']]
+        # data.append(con.count('filetable', {'user_name':data[0]}))
+        # data.append(con.count('filetable', {'user_name':data[0], 'verdict':'OK'}))
+        # if data[2] > 0:
+        #     data.append(data[3]/data[2])
+        stat.append(data)
+    with open('data_0112_01.csv', 'w') as f:
         f.write('username, rating, submitted(recent 6 month), ac, ac/all\n')
         for row in stat:
             f.write(','.join(map(str, row)) + '\n')

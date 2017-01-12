@@ -5,6 +5,7 @@ import json
 import os, os.path
 from Database import Database
 import random
+import SleepTimer
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
@@ -13,10 +14,13 @@ samplefile = 'data/sampleUsers.json'
 
 inf = 1000000000
 time_inf = inf*2
+timer = None
 
 def getData(api, option):
-    time.sleep(1)
-    return req.get(url+api, params=option).json()
+    timer.sleep(1)
+    request = req.get(url+api, params=option)
+    timer.reset()
+    return request.json()
 
 
 # get user list from codeforces (consume some time)
@@ -78,8 +82,9 @@ def saveAsJson(data, filename):
 
 
 def getSource(prob_id, contest_id):
-    time.sleep(1)
+    timer.sleep(1)
     dom = pq(base_url + 'contest/%d/submission/%d' % (contest_id, prob_id))
+    timer.reset()
     return dom.find('pre.prettyprint.program-source').text()
 
 
@@ -158,8 +163,7 @@ userdata_format = {
     'rating': 'rating',
     'maxRating': 'max_rating'
 }
-if __name__ == '__main__':
-
+def getSamples():
     db = Database()
     filenames = db.getSampleFilenames()
     idx = last()
@@ -181,3 +185,21 @@ if __name__ == '__main__':
         time.sleep(15)
 
     db.close()
+
+def setUsersToDB():
+    db = Database()
+    user_list = getUsers(userdata_format)
+    border = getLeastTime()
+    sample_user = db.getSampleUsers()
+    samples = set()
+    for user in sample_user:
+        samples.add(user['user_name'])
+    newlist = []
+    for user in user_list:
+        if not user['user_name'] in samples:
+            newlist.append(user)
+    setSubmissionHistory(db, newlist, border, end)
+
+if __name__ == '__main__':
+    timer = SleepTimer.SleepTimer()
+    getSamples()
