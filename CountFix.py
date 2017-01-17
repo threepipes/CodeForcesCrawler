@@ -34,7 +34,13 @@ def countFix(user_data):
         pre_pid = pid
     if probs == 0:
         probs = -1
-    return count_all/probs
+    return (count_all, probs)
+
+
+def add(dic, key, value):
+    if not key in dic:
+        dic[key] = 0
+    dic[key] += value
 
 if __name__ == '__main__':
     con = Con()
@@ -43,7 +49,8 @@ if __name__ == '__main__':
     print('finish getting data')
     preName = data[0]['user_name']
     user = []
-    user_avg = {}
+    counts = {}
+    probs = {}
     idx = 0
 
     for file_data in data:
@@ -53,15 +60,17 @@ if __name__ == '__main__':
         if file_data['user_name'] == preName:
             user.append(file_data)
         else:
-            avg = countFix(user)
+            (cnt, prob) = countFix(user)
             user = []
             rating = con.get('usertable', ['rating'], {'user_name': preName})
-            user_avg[rating[0]['rating']] = avg
+            rate = rating[0]['rating']
+            add(counts, rate, cnt)
+            add(probs, rate, prob)
         preName = file_data['user_name']
 
     with open('wa.csv', 'w') as f:
         for key, value in wa.items():
             f.write('%d,%d\n' % (key, value))
-    with open('fix.csv', 'w') as f:
-        for key, value in user_avg.items():
-            f.write('%d,%f\n' % (key, value))
+    with open('fix_0116.csv', 'w') as f:
+        for key in counts.keys():
+            f.write('%d,%f\n' % (key, counts[key]/probs[key]))
