@@ -31,6 +31,11 @@ class UserDB:
             self.con.update(user, self.table_name, {table_key: user[table_key]})
         else:
             self.con.insert(user, self.table_name)
-    
+
+    def getAllUser(self):
+        users = self.con.get(self.table_name, ['user_name'])
+        return [user['user_name'] for user in users]
+
+
     def close(self):
         self.con.close()

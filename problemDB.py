@@ -11,7 +11,7 @@ class ProblemDB:
     def __init__(self):
         self.con = db.Connector()
 
-    def initTables(self, drop_table=False):
+    def initTable(self, drop_table=False):
         prob_table = {
             'id': 'VARCHAR(20)',
             'contestId': 'INT(10)',
@@ -32,6 +32,15 @@ class ProblemDB:
         }
         self.con.insert(data, self.table_name)
 
+    def getProblem(self, where):
+        cols = [
+            'id', 'contestId', 'prob_index', 'points'
+        ]
+        ret = self.con.get(self.table_name, cols, where)
+        if len(ret) == 0:
+            return None
+        return ret[0]
+
     def close(self):
         self.con.close()
 
@@ -43,7 +52,7 @@ def getData(api):
 
 if __name__ == '__main__':
     db = ProblemDB()
-    db.initTables()
+    db.initTable()
     print('fin set db')
     data = getData('problemset.problems')
     print('fin get data')
