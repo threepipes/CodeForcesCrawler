@@ -149,8 +149,8 @@ class Database:
         else:
             self.con.insert(user, self.user_table)
 
-    def addFile(self, username, filename, lang, verdict, timestamp):
-        data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict, 'timestamp': timestamp}
+    def addFile(self, username, filename, lang, verdict, timestamp, points):
+        data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict, 'timestamp': timestamp, 'points': points}
         if self.con.existKey(self.file_table, 'file_name', filename):
             self.con.update(data, self.file_table, {'file_name': filename})
         else:
@@ -162,6 +162,10 @@ class Database:
 
     def getSampleUsers(self):
         return self.con.get(self.sample_user_table, ['user_name'])
+    
+    def hasNull(self, username, col):
+        element = self.con.get(self.file_table, [col], {'user_name': username}, 1)
+        return len(element)>0 and element[0][col] is None
 
     def showUserTable(self):
         self.con.show(self.user_table)
@@ -185,7 +189,8 @@ class Database:
             'user_name': 'VARCHAR(30)',
             'lang': 'VARCHAR(20)',
             'verdict': 'VARCHAR(20)',
-            'timestamp': 'BIGINT UNSIGNED'
+            'timestamp': 'BIGINT UNSIGNED',
+            'points': 'INT(5)'
         }
         self.con.createTable('FileTable', filetable, primary_key='file_name')
 
@@ -204,19 +209,36 @@ class Database:
         filenames = list(map(lambda x: x[0], result))
         return filenames
 
-if __name__ == '__main__':
+
+def outputACRate():
     con = Connector()
     table = 'usertable'
     userlist = con.get(table, ['user_name', 'rating'])
+    filelist = con.get('filetable', ['user_name', 'verdict'])
+    msac = {}
+    msng = {}
+    for f in filelist:
+        user = f['user_name']
+        if not user in msac:
+            msac[user] = 0
+            msng[user] = 0
+        if f['verdict'] == 'OK':
+            msac[user] += 1
+        else:
+            msng[user] += 1
+
     stat = []
+    idx = 1
     for user in userlist:
+        name = user['user_name']
         data = ['"%s"' % user['user_name'], user['rating']]
-        # data.append(con.count('filetable', {'user_name':data[0]}))
-        # data.append(con.count('filetable', {'user_name':data[0], 'verdict':'OK'}))
-        # if data[2] > 0:
-        #     data.append(data[3]/data[2])
+        data.append(msac[name]+msng[name])
+        data.append(msac[name])
+        if data[2] > 0:
+            data.append(data[3]/data[2])
         stat.append(data)
-    with open('data_0112_01.csv', 'w') as f:
+    with open('data_0112.csv', 'w') as f:
         f.write('username, rating, submitted(recent 6 month), ac, ac/all\n')
         for row in stat:
             f.write(','.join(map(str, row)) + '\n')
+

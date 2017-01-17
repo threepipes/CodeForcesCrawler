@@ -17,7 +17,7 @@ time_inf = inf*2
 timer = None
 
 def getData(api, option):
-    timer.sleep(1)
+    timer.sleep(0.4)
     request = req.get(url+api, params=option)
     timer.reset()
     return request.json()
@@ -45,16 +45,22 @@ def getSampleUsers(datalist, n):
 
 
 def setSubmissionHistory(db, users, time_from, time_end):
-    db.createSampleTableIfNotExists()
-    print('start getting submissions')
+    # db.createSampleTableIfNotExists()
+    # print('start getting submissions')
     for user in users:
         db.addUser(user)
         handle = user['user_name']
-        source = recentSources(handle, time_from=time_from, time_end=time_end, src=False)
-        db.addSampleUser(handle, len(source))
+        try:
+            source = recentSources(handle, time_from=time_from, time_end=time_end, src=False)
+        except:
+            print('error '+handle)
+            continue
+        if len(source) == 0:
+            continue
+        # db.addSampleUser(handle, len(source))
         for src in source:
             filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
-            db.addFile(handle, filename, src['lang'], src['verdict'])
+            db.addFile(handle, filename, src['lang'], src['verdict'], src['timestamp'], src['points'])
 
 
 # get n users with some information (currently: handle, rating, max_rating)
@@ -98,6 +104,11 @@ def getSourceData(status, src=True):
     data['contest_id'] = contest_id
     data['lang'] = status['programmingLanguage']
     data['timestamp'] = status['creationTimeSeconds']
+    problem = status['problem']
+    if 'points' in problem:
+        data['points'] = problem['points']
+    else:
+        data['points'] = 0
     if 'verdict' in status:
         data['verdict'] = status['verdict'][:20]
     else:
@@ -113,6 +124,17 @@ def recentSources(username, n=inf, time_from=0, time_end=time_inf, src=True):
         'count': n
     }
     response = getData('user.status', query)
+    if response['status'] == 'FAILED':
+        try:
+            timer.sleep(0.4)
+            name = pq(base_url+'profile/'+username)('title').text()[:-len(' - Codeforces')]
+            timer.reset()
+            query['handle'] = name
+            username = name
+            response = getData('user.status', query)
+        except:
+            print(username+' failed')
+            return []
     submissions = response['result']
     source = []
     print("%s's source" % username)
@@ -192,15 +214,25 @@ def setUsersToDB():
     user_list = getUsers(userdata_format)
     border = getLeastTime()
     sample_user = db.getSampleUsers()
-    samples = set()
-    for user in sample_user:
-        samples.add(user['user_name'])
+    # samples = set()
+    # for user in sample_user:
+    #     samples.add(user['user_name'])
     newlist = []
-    for user in user_list:
-        if not user['user_name'] in samples:
-            newlist.append(user)
-    setSubmissionHistory(db, newlist, border, end)
+    # flag = False
+    for i, user in enumerate(user_list):
+        # if not user['user_name'] in samples:
+        # if user['user_name'] == 'SwapnilDGr8':
+        #     flag = True
+        # if not flag:
+        #     continue
+        if (i+1)%100 == 0:
+            print('%d/%d' % (i, len(user_list)))
+        if not db.hasNull(user['user_name'], 'points'):
+            continue
+        # newlist.append(user)
+        setSubmissionHistory(db, [user], border, end)
 
 if __name__ == '__main__':
     timer = SleepTimer.SleepTimer()
-    getSamples()
+    setUsersToDB()
+    # getSamples()
