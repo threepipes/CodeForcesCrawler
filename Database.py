@@ -1,7 +1,6 @@
 import mysql.connector as mc
 
 
-# TODO use join with array
 def mapToStr(data, separator=',', connector='='):
     result = []
     for (key, value) in data.items():
@@ -150,7 +149,14 @@ class Database:
             self.con.insert(user, self.user_table)
 
     def addFile(self, username, filename, lang, verdict, timestamp, points):
-        data = {'file_name': filename, 'user_name': username, 'lang': lang, 'verdict': verdict, 'timestamp': timestamp, 'points': points}
+        data = {
+            'file_name': filename,
+            'user_name': username,
+            'lang': lang,
+            'verdict': verdict,
+            'timestamp': timestamp,
+            'points': points
+        }
         if self.con.existKey(self.file_table, 'file_name', filename):
             self.con.update(data, self.file_table, {'file_name': filename})
         else:
