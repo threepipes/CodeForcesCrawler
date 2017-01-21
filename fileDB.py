@@ -41,7 +41,7 @@ class FileDB:
         # print(filename+' '+str(update_data))
         self.con.update(update_data, self.table_name, {'file_name': filename})
 
-    def getFiles(self, where):
+    def getFiles(self, where, limit=-1):
         cols = [
             'file_name',
             'user_name',
@@ -51,7 +51,7 @@ class FileDB:
             'points',
             'prob_index'
         ]
-        return self.con.get(self.table_name, cols, where)
+        return self.con.get(self.table_name, cols, where, limit)
 
 
 def getProblemIndex(prob_db, filename, points):
