@@ -168,7 +168,7 @@ class Database:
 
     def getSampleUsers(self):
         return self.con.get(self.sample_user_table, ['user_name'])
-    
+
     def hasNull(self, username, col):
         element = self.con.get(self.file_table, [col], {'user_name': username}, 1)
         return len(element)>0 and element[0][col] is None
@@ -234,7 +234,6 @@ def outputACRate():
             msng[user] += 1
 
     stat = []
-    idx = 1
     for user in userlist:
         name = user['user_name']
         data = ['"%s"' % user['user_name'], user['rating']]

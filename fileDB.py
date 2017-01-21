@@ -16,7 +16,8 @@ class FileDB:
             'verdict': 'VARCHAR(20)',
             'timestamp': 'BIGINT UNSIGNED',
             'points': 'INT(5)',
-            'prob_index': 'VARCHAR(5)'
+            'prob_index': 'VARCHAR(5)',
+            'contestId': 'INT(10)'
         }
         self.con.createTable('FileTable', filetable, primary_key='file_name')
 
@@ -49,7 +50,8 @@ class FileDB:
             'verdict',
             'timestamp',
             'points',
-            'prob_index'
+            'prob_index',
+            'contestId'
         ]
         return self.con.get(self.table_name, cols, where, limit)
 
@@ -91,5 +93,20 @@ def updateProbIndex():
 
     fdb.close()
 
+def updateContestId():
+    udb = UserDB()
+    users = udb.getAllUser()
+    udb.close()
+    fdb = FileDB()
+    for i, user in enumerate(users):
+        if (i+1)%10 == 0:
+            print(i+1)
+        files = fdb.getFiles({'user_name': user})
+        for row in files:
+            name = row['file_name']
+            contestId = name.split('_')[-1].split('.')[0]
+            fdb.update(name, {'contestId': contestId})
+
+
 if __name__ == '__main__':
-    updateProbIndex()
+    updateContestId()
