@@ -74,7 +74,7 @@ def getStatistics(data, points):
             f.write('%d,%d\n' % (key, value))
     with open('data/fix_%d.csv' % points, 'w') as f:
         for key in counts.keys():
-            f.write('%d,%f\n' % (user_rating[key], counts[key]/probs[key]))
+            f.write('%d,%f,%d\n' % (user_rating[key], counts[key]/probs[key], counts[key]))
 
     print('finish writing for points: '+str(points))
 

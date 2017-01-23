@@ -64,7 +64,12 @@ class Connector:
         if limit > 0:
             limit_sentence = ' LIMIT ' + str(limit)
         if not where is None:
-            where_sentence = ' WHERE ' + mapToStr(where, separator=' and ')
+            if isinstance(where, dict):
+                where_sentence = ' WHERE ' + mapToStr(where, separator=' and ')
+            elif isinstance(where, list):
+                where_sentence = ' WHERE ' + ' and '.join(where)
+            elif isinstance(where, str):
+                where_sentence = ' WHERE ' + where
         sentence = 'SELECT %s FROM %s%s%s' % (','.join(col), table, where_sentence, limit_sentence)
         self.cur.execute(sentence)
         result = self.cur.fetchall()

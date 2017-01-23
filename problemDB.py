@@ -41,6 +41,13 @@ class ProblemDB:
             return None
         return ret[0]
 
+    def getProblems(self, where):
+        cols = [
+            'id', 'contestId', 'prob_index', 'points'
+        ]
+        ret = self.con.get(self.table_name, cols, where)
+        return ret
+
     def close(self):
         self.con.close()
 
