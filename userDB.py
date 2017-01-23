@@ -36,6 +36,8 @@ class UserDB:
         users = self.con.get(self.table_name, ['user_name'])
         return [user['user_name'] for user in users]
 
+    def getAllUserWithRating(self):
+        return self.con.get(self.table_name, ['user_name', 'rating'])
 
     def close(self):
         self.con.close()
