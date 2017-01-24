@@ -5,3 +5,4 @@
 *.xlsx
 *.txt
 *.html
+.pylintrc
