@@ -15,9 +15,9 @@ class FileDB:
             'lang': 'VARCHAR(20)',
             'verdict': 'VARCHAR(20)',
             'timestamp': 'BIGINT UNSIGNED',
-            'points': 'INT(5)',
             'prob_index': 'VARCHAR(5)',
-            'contestId': 'INT(10)'
+            'contestId': 'INT(10)',
+            'url': 'VARCHAR(55)'
         }
         self.con.createTable('FileTable', filetable, primary_key='file_name')
 
@@ -31,7 +31,6 @@ class FileDB:
             'lang': lang,
             'verdict': verdict,
             'timestamp': timestamp,
-            'points': points
         }
         if self.con.existKey(self.table_name, 'file_name', filename):
             self.con.update(data, self.table_name, {'file_name': filename})
@@ -49,14 +48,19 @@ class FileDB:
             'lang',
             'verdict',
             'timestamp',
-            'points',
             'prob_index',
-            'contestId'
+            'contestId',
+            'url'
         ]
         return self.con.get(self.table_name, cols, where, limit)
 
 
+'''
 def getProblemIndex(prob_db, filename, points):
+    """
+    prohibited to use
+    (column points is droped)
+    """
     name = filename.split('.')[-2]
     prob_id = int(name.split('_')[-1])
     prob = prob_db.getProblem({'contestId': prob_id, 'points': points})
@@ -68,6 +72,10 @@ def getProblemIndex(prob_db, filename, points):
 
 
 def updateProbIndex():
+    """
+    prohibited to use
+    (column points is droped)
+    """
     udb = UserDB()
     users = udb.getAllUser()
     udb.close()
@@ -92,6 +100,26 @@ def updateProbIndex():
             fdb.update(row['file_name'], {'prob_index': prob_index})
 
     fdb.close()
+'''
+
+def updateUrl():
+    udb = UserDB()
+    users = udb.getAllUser()
+    udb.close()
+    fdb = FileDB()
+    base_url = 'http://codeforces.com/'
+    for i, user in enumerate(users):
+        if (i+1)%10 == 0:
+            print(i+1)
+        files = fdb.getFiles({'user_name': user})
+        for row in files:
+            name = row['file_name']
+            contest_id = name.split('_')[-1].split('.')[0]
+            run_id = name.split('_')[-2]
+            url = base_url + 'contest/%s/submission/%s' % (contest_id, run_id)
+            fdb.update(name, {'url': url})
+    fdb.close()
+
 
 def updateContestId():
     udb = UserDB()
@@ -109,4 +137,4 @@ def updateContestId():
 
 
 if __name__ == '__main__':
-    updateContestId()
+    updateUrl()
