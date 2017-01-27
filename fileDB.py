@@ -4,55 +4,55 @@ from problemDB import ProblemDB
 
 class FileDB:
     table_name = 'FileTable'
+    key = 'file_name'
+    column = [
+        'file_name',
+        'user_name',
+        'lang',
+        'verdict',
+        'timestamp',
+        'prob_index',
+        'contestId',
+        'url'
+    ]
+    data_table = {
+        'file_name': 'VARCHAR(50)',
+        'user_name': 'VARCHAR(30)',
+        'lang': 'VARCHAR(20)',
+        'verdict': 'VARCHAR(20)',
+        'timestamp': 'BIGINT UNSIGNED',
+        'prob_index': 'VARCHAR(5)',
+        'contestId': 'INT(10)',
+        'url': 'VARCHAR(55)'
+    }
 
     def __init__(self):
         self.con = Connector()
 
     def initTable(self):
-        filetable = {
-            'file_name': 'VARCHAR(50)',
-            'user_name': 'VARCHAR(30)',
-            'lang': 'VARCHAR(20)',
-            'verdict': 'VARCHAR(20)',
-            'timestamp': 'BIGINT UNSIGNED',
-            'prob_index': 'VARCHAR(5)',
-            'contestId': 'INT(10)',
-            'url': 'VARCHAR(55)'
-        }
-        self.con.createTable('FileTable', filetable, primary_key='file_name')
+        self.con.createTable(self.table_name, self.data_table, primary_key=self.key)
 
     def close(self):
         self.con.close()
 
-    def addFile(self, username, filename, lang, verdict, timestamp, points):
-        data = {
-            'file_name': filename,
-            'user_name': username,
-            'lang': lang,
-            'verdict': verdict,
-            'timestamp': timestamp,
-        }
-        if self.con.existKey(self.table_name, 'file_name', filename):
-            self.con.update(data, self.table_name, {'file_name': filename})
+    def addFile(self, insert_data):
+        if not self.key in insert_data:
+            print('Error: no primary key in insert_data')
+            return
+        data = {}
+        for col in self.column:
+            if col in insert_data:
+                data[col] = insert_data[col]
+        if self.con.existKey(self.table_name, self.key, insert_data[self.key]):
+            self.con.update(data, self.table_name, {self.key: insert_data[self.key]})
         else:
             self.con.insert(data, self.table_name)
 
-    def update(self, filename, update_data):
-        # print(filename+' '+str(update_data))
-        self.con.update(update_data, self.table_name, {'file_name': filename})
+    def update(self, keyname, update_data):
+        self.con.update(update_data, self.table_name, {self.key: keyname})
 
     def getFiles(self, where, limit=-1):
-        cols = [
-            'file_name',
-            'user_name',
-            'lang',
-            'verdict',
-            'timestamp',
-            'prob_index',
-            'contestId',
-            'url'
-        ]
-        return self.con.get(self.table_name, cols, where, limit)
+        return self.con.get(self.table_name, self.column, where, limit)
 
 
 '''
