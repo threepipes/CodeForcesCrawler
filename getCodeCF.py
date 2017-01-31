@@ -4,6 +4,7 @@ import time
 import json
 import os, os.path
 from Database import Database
+from fileDB import FileDB
 import random
 import SleepTimer
 
@@ -48,7 +49,7 @@ def setSubmissionHistory(db, users, time_from, time_end):
     # db.createSampleTableIfNotExists()
     # print('start getting submissions')
     for user in users:
-        db.addUser(user)
+        # db.addUser(user)
         handle = user['user_name']
         try:
             source = recentSources(handle, time_from=time_from, time_end=time_end, src=False)
@@ -60,7 +61,8 @@ def setSubmissionHistory(db, users, time_from, time_end):
         # db.addSampleUser(handle, len(source))
         for src in source:
             filename = '%s_%s_%s.src' % (handle, src['prob_id'], src['contest_id'])
-            db.addFile(handle, filename, src['lang'], src['verdict'], src['timestamp'], src['points'])
+            src['file_name'] = filename
+            db.addFile(src)
 
 
 # get n users with some information (currently: handle, rating, max_rating)
@@ -105,10 +107,10 @@ def getSourceData(status, src=True):
     data['lang'] = status['programmingLanguage']
     data['timestamp'] = status['creationTimeSeconds']
     problem = status['problem']
-    if 'points' in problem:
-        data['points'] = problem['points']
-    else:
-        data['points'] = 0
+    data['prob_index'] = problem['index']
+    data['url'] = base_url + 'contest/%d/submission/%d' % (contest_id, prob_id)
+    if contest_id > 1000:
+        data['url'] = '-'
     if 'verdict' in status:
         data['verdict'] = status['verdict'][:20]
     else:
@@ -189,7 +191,7 @@ userdata_format = {
 def getSamples():
     db = Database()
     filenames = db.getSampleFilenames()
-    idx = last()
+    idx = 0
     while True:
         length = len(filenames)
         try:
@@ -201,6 +203,7 @@ def getSamples():
                 items = filename[:-4].split('_')
                 source = getSource(int(items[-2]), int(items[-1]))
                 saveFile('data/src/'+filename, source)
+                # saveFile('//nas2/s-tutumi/codeforces/src/'+filename, source)
                 idx += 1
         except:
             print('Error in idx: '+str(idx))
@@ -209,16 +212,67 @@ def getSamples():
 
     db.close()
 
-def setUsersToDB():
+
+def countMiss():
     db = Database()
+    filenames = db.getSampleFilenames()
+    count = 0
+    for i, filename in enumerate(filenames):
+        if (i+1)%10000 == 0:
+            print('fin '+str(i+1))
+        if not os.path.isfile('data/src/'+filename):
+            count += 1
+    db.close()
+    print(count)
+
+
+def setUsersToDB():
+    # with open('has_null.txt') as f:
+    #     user_list = [{'user_name': row.strip()} for row in f]
     user_list = getUsers(userdata_format)
     border = getLeastTime()
-    sample_user = db.getSampleUsers()
     # samples = set()
     # for user in sample_user:
     #     samples.add(user['user_name'])
-    newlist = []
+    # newlist = []
+    fdb = FileDB()
     # flag = False
+    index = 'prob_index'
+    for i, user in enumerate(user_list):
+        # if not user['user_name'] in samples:
+        # if user['user_name'] == 'SwapnilDGr8':
+        #     flag = True
+        # if not flag:
+        #     continue
+        if (i+1)%100 == 0:
+            fdb.con.connector.commit()
+            print('%d/%d' % (i, len(user_list)))
+        # if not fdb.hasNull(user['user_name'], 'points'):
+        #     continue
+        # newlist.append(user)
+        file_list = fdb.getFiles({'user_name': user['user_name']})
+        for fd in file_list:
+            if fd['timestamp'] is None:
+                continue
+            if not index in fd or fd[index] is None or fd[index] == '-':
+                setSubmissionHistory(fdb, [user], border, end)
+                break
+    fdb.close()
+
+
+def checkDB():
+    # with open('has_null.txt') as f:
+    #     user_list = [{'user_name': row.strip()} for row in f]
+    user_list = getUsers(userdata_format)
+    border = getLeastTime()
+    # samples = set()
+    # for user in sample_user:
+    #     samples.add(user['user_name'])
+    # newlist = []
+    fdb = FileDB()
+    # flag = False
+    index = 'prob_index'
+    blacklist = []
     for i, user in enumerate(user_list):
         # if not user['user_name'] in samples:
         # if user['user_name'] == 'SwapnilDGr8':
@@ -227,12 +281,31 @@ def setUsersToDB():
         #     continue
         if (i+1)%100 == 0:
             print('%d/%d' % (i, len(user_list)))
-        if not db.hasNull(user['user_name'], 'points'):
-            continue
+        # if not fdb.hasNull(user['user_name'], 'points'):
+        #     continue
         # newlist.append(user)
-        setSubmissionHistory(db, [user], border, end)
+        file_list = fdb.getFiles({'user_name': user['user_name']})
+        for fd in file_list:
+            if fd['timestamp'] is None:
+                continue
+            if not index in fd or fd[index] is None or fd[index] == '-':
+                blacklist.append(user)
+                break
+        if len(blacklist)>10:
+            break
+    print(blacklist)
+    print(len(blacklist))
+    fdb.close()
+
 
 if __name__ == '__main__':
+    # countMiss()
     timer = SleepTimer.SleepTimer()
-    setUsersToDB()
-    # getSamples()
+    # setUsersToDB()
+    getSamples()
+    # checkDB()
+    # user_list = getUsers(userdata_format)
+    # target = -1
+    # for i, user in enumerate(user_list):
+    #     if user['user_name'] == 'MrBear':
+    #         print(i)
