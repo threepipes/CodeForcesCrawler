@@ -6,6 +6,7 @@ import time
 from operator import itemgetter
 from pyquery import PyQuery as pq
 from contestDB import ContestDB
+from fileDB import FileDB
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
@@ -19,7 +20,9 @@ class ProblemDB:
         'prob_index',
         'points',
         'solved',
-        'level'
+        'level',
+        'try_in_sample',
+        'solved_in_sample'
     ]
 
     def __init__(self):
@@ -63,6 +66,9 @@ class ProblemDB:
 
     def close(self):
         self.con.close()
+
+    def commit(self):
+        self.con.commit()
 
 
 def getData(api):
@@ -111,7 +117,7 @@ def acceptanceRatio():
         if cont['contestant'] == 0:
             ac_rate = -1
         else:
-            ac_rate = prob['solved']/cont['contestant']
+            ac_rate = prob['solved']**1.3/cont['contestant']
         row = [
             '"%s"' % cont['name'],
             prob['id'],
@@ -164,11 +170,11 @@ def culcLevels():
     problem_data = acceptanceRatio()
     valid_data = filter(lambda x: x[3] > 30, problem_data)
     sorted_data = sorted(valid_data, key=itemgetter(5))
-    divided_data = divide(sorted_data, 10)
+    divided_data = divide(sorted_data, 6)
 
     for i, level_data in enumerate(divided_data):
-        updateLevel(level_data, 10-i)
-        writeData('data/levels/level_%d.csv' % (i+1), level_data)
+        # updateLevel(level_data, 10-i)
+        writeData('data/levels_double/level_%d.csv' % (i+1), level_data)
 
 
 def updateLevel(data, level):
@@ -176,7 +182,28 @@ def updateLevel(data, level):
     for row in data:
         prob_id = row[1]
         db.update({'level': level}, prob_id)
+    db.close()
+
+
+def setTryAndSolve():
+    fdb = FileDB()
+    pdb = ProblemDB()
+    problems = pdb.getProblems()
+    for i, prob in enumerate(problems):
+        if (i+1)%10 == 0:
+            print('%d/%d' % (i+1, len(problems)))
+        contest_id = prob['contestId']
+        index = prob['prob_index']
+        submits = fdb.getFiles({'contestId': contest_id, 'prob_index': index})
+        tries = len(submits)
+        ok = 0
+        for submit in submits:
+            if submit['verdict'] == 'OK':
+                ok += 1
+        pdb.update({'try_in_sample': tries, 'solved_in_sample': ok}, prob['id'])
+        pdb.commit()
+    pdb.close()
 
 
 if __name__ == '__main__':
-    culcLevels()
+    setTryAndSolve()
