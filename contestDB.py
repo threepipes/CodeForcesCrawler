@@ -78,17 +78,23 @@ def setContestants():
     db = ContestDB()
     contests = db.getContests()
     cid_name = 'contestId'
-    for i, con in enumerate(contests[680:]):
+    for i, con in enumerate(contests):
+        if con['contestant'] is None or con['contestant'] > 5:
+            continue
         print('%d/%d' % (i+1, len(contests)))
+        print(con)
         success = True
+        num = 0
         while True:
             try:
                 data = getData('contest.ratingChanges', {cid_name: con[cid_name]})
-                if data['status'] == 'OK':
+                if data['status'] == 'OK' and len(data['result']) > 0:
+                    num = len(data['result'])
                     break
                 else:
                     data = getData('contest.standings', {cid_name: con[cid_name], 'showUnofficial': 'true'})
                     if data['status'] == 'OK':
+                        num = len(data['result']['rows'])
                         break
                     else:
                         print('cannot get data:'+str(con))
@@ -99,9 +105,10 @@ def setContestants():
             timer.sleep(5)
         if not success:
             continue
-        num = len(data['result'])
         update = {cid_name: con[cid_name], 'contestant': num}
+        print('success: %d' % num)
         db.updateContest(update)
+        db.con.connector.commit()
     db.close()
 
 
