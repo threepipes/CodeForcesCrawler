@@ -22,7 +22,8 @@ class ProblemDB:
         'solved',
         'level',
         'try_in_sample',
-        'solved_in_sample'
+        'solved_in_sample',
+        'submission',
     ]
 
     def __init__(self):
@@ -71,8 +72,8 @@ class ProblemDB:
         self.con.commit()
 
 
-def getData(api):
-    request = req.get(url+api)
+def getData(api, option=None):
+    request = req.get(url+api, params=option)
     return request.json()
 
 
@@ -98,13 +99,18 @@ def setSolvedToDB():
     db.close()
 
 
-def acceptanceRatio():
+def getContestTable():
     cdb = ContestDB()
     contest_list = cdb.getContests()
     cdb.close()
     contest = {}
     for cont in contest_list:
         contest[cont['contestId']] = cont
+    return contest
+
+
+def acceptanceRatio():
+    contest = getContestTable()
 
     pdb = ProblemDB()
     problems = pdb.getProblems()
@@ -129,6 +135,36 @@ def acceptanceRatio():
         # row = list(map(str, row))
         result.append(row)
     writeData('data/ac_rate_new.csv', result)
+    pdb.close()
+    return result
+
+
+def acceptanceRatio_new():
+    contest = getContestTable()
+
+    pdb = ProblemDB()
+    problems = pdb.getProblems()
+
+    result = []
+    for prob in problems:
+        cont = contest[prob['contestId']]
+        if prob['submission'] is None:
+            continue
+        if prob['submission'] == 0:
+            ac_rate = -1
+        else:
+            ac_rate = prob['solved']**1.3/prob['submission']
+        row = [
+            '"%s"' % cont['name'],
+            prob['id'],
+            prob['solved'],
+            prob['submission'],
+            prob['points'],
+            ac_rate,
+        ]
+        # row = list(map(str, row))
+        result.append(row)
+    writeData('data/ac_rate_new2.csv', result)
     pdb.close()
     return result
 
@@ -174,7 +210,7 @@ def culcLevels():
 
     for i, level_data in enumerate(divided_data):
         # updateLevel(level_data, 10-i)
-        writeData('data/levels_double/level_%d.csv' % (i+1), level_data)
+        writeData('data/levels_new/level_%d.csv' % (i+1), level_data)
 
 
 def updateLevel(data, level):
@@ -205,5 +241,52 @@ def setTryAndSolve():
     pdb.close()
 
 
+def getAllSubmissionNumber(contest_id, index):
+    time.sleep(0.8)
+    url = base_url + '/problemset/status/%d/problem/%s' % (contest_id, index)
+    payloads = {
+        'action':'setupSubmissionFilter',
+        'frameProblemIndex': index,
+        'verdictName': 'anyVerdict',
+        'programTypeForInvoker': 'anyProgramTypeForInvoker',
+        'comparisonType': 'NOT_USED',
+        'judgedTestCount':'',
+    }
+    header = {
+        'User-Agent': 'Mozilla/5.0'
+    }
+    session = req.Session()
+    dom = pq(session.get(url).text)
+    payloads['csrf_token'] = pq(dom('input[name="csrf_token"]')).attr('value')
+
+    time.sleep(0.8)
+    page_data = session.post(url, data=payloads, headers=header)
+    dom = pq(page_data.text)
+
+    last_page = pq(dom('span.page-index')[-1]).text()
+    # print('%d, %d, %s' % (rejected, accepted, next_page))
+    time.sleep(0.8)
+    dom = pq(session.get(url + '/page/' + last_page).text)
+    submission = len(dom('span.submissionVerdictWrapper')) + (int(last_page)-1)*50
+    return submission
+
+
+def setSubmissionNumbers():
+    pdb = ProblemDB()
+    problems = pdb.getProblems()
+    for i, prob in enumerate(problems):
+        print('%d/%d' % (i+1, len(problems)))
+        contest_id = prob['contestId']
+        index = prob['prob_index']
+        try:
+            submits = getAllSubmissionNumber(contest_id, index)
+        except:
+            print('error')
+            continue
+        pdb.update({'submission': submits}, prob['id'])
+        pdb.commit()
+    pdb.close()
+
+
 if __name__ == '__main__':
-    setTryAndSolve()
+    setSubmissionNumbers()
