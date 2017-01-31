@@ -109,7 +109,7 @@ def getProblemTable():
     for prob in probs:
         pid = prob['prob_index']
         cid = prob['contestId']
-        points = prob['points']
+        points = prob['level']
         if not cid in table:
             table[cid] = {'-': 0}
         table[cid][pid] = points
@@ -134,6 +134,7 @@ if __name__ == '__main__':
         'prob_index'
     ]
     data = con.get('filetable', cols, where='contestId<10000')
+    con.close()
     count_none = 0
     has_null = set()
     for d in data:
@@ -152,6 +153,6 @@ if __name__ == '__main__':
     with open('data/fix/user_numbers_rating.csv', 'w') as f:
         f.write('rating,%s\n' % ','.join(title))
     for p in sorted(points):
-        if (p < 100) or (p in [3500, 5000]):
+        if p <= 0:
             continue
         getStatistics(data, p)

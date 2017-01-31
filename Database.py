@@ -126,6 +126,9 @@ class Connector:
         tables = self.cur.fetchall()
         return (table,) in tables
 
+    def commit(self):
+        self.connector.commit()
+
 
 class Database:
     user_data = ['user_name', 'rating', 'max_rating']

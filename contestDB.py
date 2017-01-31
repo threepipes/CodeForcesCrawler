@@ -92,7 +92,7 @@ def setContestants():
                     num = len(data['result'])
                     break
                 else:
-                    data = getData('contest.standings', {cid_name: con[cid_name], 'showUnofficial': 'true'})
+                    data = getData('contest.standings', {cid_name: con[cid_name], 'showUnofficial': 'false'})
                     if data['status'] == 'OK':
                         num = len(data['result']['rows'])
                         break

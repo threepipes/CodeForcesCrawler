@@ -1,6 +1,6 @@
 from Database import Connector
 from userDB import UserDB
-from problemDB import ProblemDB
+# from problemDB import ProblemDB
 
 class FileDB:
     table_name = 'FileTable'
@@ -107,17 +107,19 @@ def updateUrl():
     users = udb.getAllUser()
     udb.close()
     fdb = FileDB()
-    base_url = 'http://codeforces.com/'
     for i, user in enumerate(users):
         if (i+1)%10 == 0:
             print(i+1)
+            fdb.con.connector.commit()
         files = fdb.getFiles({'user_name': user})
         for row in files:
             name = row['file_name']
             contest_id = name.split('_')[-1].split('.')[0]
             run_id = name.split('_')[-2]
-            url = base_url + 'contest/%s/submission/%s' % (contest_id, run_id)
-            fdb.update(name, {'url': url})
+            if len(contest_id) <= 4 or row['url'] == '-':
+                continue
+            print(row)
+            fdb.update(name, {'url': '-'})
     fdb.close()
 
 
