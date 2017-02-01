@@ -109,7 +109,7 @@ def getContestTable():
     return contest
 
 
-def acceptanceRatio():
+def acceptanceRatio_old():
     contest = getContestTable()
 
     pdb = ProblemDB()
@@ -139,7 +139,7 @@ def acceptanceRatio():
     return result
 
 
-def acceptanceRatio_new():
+def acceptanceRatio():
     contest = getContestTable()
 
     pdb = ProblemDB()
@@ -153,7 +153,7 @@ def acceptanceRatio_new():
         if prob['submission'] == 0:
             ac_rate = -1
         else:
-            ac_rate = prob['solved']**1.3/prob['submission']
+            ac_rate = prob['solved']/prob['submission']
         row = [
             '"%s"' % cont['name'],
             prob['id'],
@@ -164,6 +164,8 @@ def acceptanceRatio_new():
         ]
         # row = list(map(str, row))
         result.append(row)
+        # update TODO
+        pdb.update({'acceptance_rate': ac_rate}, prob['id'])
     writeData('data/ac_rate_new2.csv', result)
     pdb.close()
     return result
@@ -203,14 +205,15 @@ def initDB():
 
 
 def culcLevels():
+    divisions = 6
     problem_data = acceptanceRatio()
     valid_data = filter(lambda x: x[3] > 30, problem_data)
     sorted_data = sorted(valid_data, key=itemgetter(5))
-    divided_data = divide(sorted_data, 6)
+    divided_data = divide(sorted_data, divisions)
 
     for i, level_data in enumerate(divided_data):
-        # updateLevel(level_data, 10-i)
-        writeData('data/levels_new/level_%d.csv' % (i+1), level_data)
+        updateLevel(level_data, divisions-i)
+        writeData('data/levels_new/level_%d.csv' % (divisions-i), level_data)
 
 
 def updateLevel(data, level):
@@ -263,10 +266,14 @@ def getAllSubmissionNumber(contest_id, index):
     page_data = session.post(url, data=payloads, headers=header)
     dom = pq(page_data.text)
 
-    last_page = pq(dom('span.page-index')[-1]).text()
+    pages = dom('span.page-index')
+    if len(pages) > 0:
+        last_page = pq(pages[-1]).text()
     # print('%d, %d, %s' % (rejected, accepted, next_page))
-    time.sleep(0.8)
-    dom = pq(session.get(url + '/page/' + last_page).text)
+        time.sleep(0.8)
+        dom = pq(session.get(url + '/page/' + last_page).text)
+    else:
+        last_page = 1
     submission = len(dom('span.submissionVerdictWrapper')) + (int(last_page)-1)*50
     return submission
 
@@ -278,10 +285,13 @@ def setSubmissionNumbers():
         print('%d/%d' % (i+1, len(problems)))
         contest_id = prob['contestId']
         index = prob['prob_index']
+        if not prob['submission'] is None:
+            continue
         try:
             submits = getAllSubmissionNumber(contest_id, index)
         except:
-            print('error')
+            print('error: ' + prob['id'])
+            time.sleep(1)
             continue
         pdb.update({'submission': submits}, prob['id'])
         pdb.commit()
@@ -289,4 +299,4 @@ def setSubmissionNumbers():
 
 
 if __name__ == '__main__':
-    setSubmissionNumbers()
+    culcLevels()

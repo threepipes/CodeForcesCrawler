@@ -138,5 +138,32 @@ def updateContestId():
             fdb.update(name, {'contestId': contestId})
 
 
+def countSecondSubmissions():
+    udb = UserDB()
+    users = udb.getAllUser()
+    udb.close()
+    fdb = FileDB()
+    counter = [0]*100
+    all_ac = 0
+    for i, user in enumerate(users):
+        if (i+1)%100 == 0:
+            print(i+1)
+            fdb.con.commit()
+        files = fdb.getFiles({'user_name': user})
+        ac_count = {}
+        for row in files:
+            if row['verdict'] != 'OK' or row['contestId'] is None or  row['prob_index'] is None:
+                continue
+            all_ac += 1
+            prob_id = str(row['contestId']) + row['prob_index']
+            if not prob_id in ac_count:
+                ac_count[prob_id] = 0
+            ac_count[prob_id] += 1
+        for c in ac_count.values():
+            counter[c] += 1
+    print(counter)
+    print(all_ac)
+
+
 if __name__ == '__main__':
-    updateUrl()
+    countSecondSubmissions()
