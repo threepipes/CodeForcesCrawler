@@ -7,6 +7,7 @@ from operator import itemgetter
 from pyquery import PyQuery as pq
 from contestDB import ContestDB
 from fileDB import FileDB
+from acceptanceDB import AcceptanceDB
 
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
@@ -19,11 +20,7 @@ class ProblemDB:
         'contestId',
         'prob_index',
         'points',
-        'solved',
         'level',
-        'try_in_sample',
-        'solved_in_sample',
-        'submission',
     ]
 
     def __init__(self):
@@ -143,46 +140,59 @@ def acceptanceRatio():
     contest = getContestTable()
 
     pdb = ProblemDB()
+    adb = AcceptanceDB()
     problems = pdb.getProblems()
+    prob_data = adb.getProblems()
 
     result = []
-    for prob in problems:
+    for ac, prob in zip(prob_data, problems):
         cont = contest[prob['contestId']]
-        if prob['submission'] is None:
+        if ac['submission'] is None:
             continue
-        if prob['submission'] == 0:
+        if ac['submission'] == 0:
             ac_rate = -1
         else:
-            ac_rate = prob['solved']/prob['submission']
+            ac_rate = ac['solved']/ac['submission']
         row = [
             '"%s"' % cont['name'],
-            prob['id'],
-            prob['solved'],
-            prob['submission'],
-            prob['points'],
+            ac['id'],
+            ac['solved'],
+            ac['submission'],
             ac_rate,
         ]
         # row = list(map(str, row))
         result.append(row)
         # update TODO
-        pdb.update({'acceptance_rate': ac_rate}, prob['id'])
+        # pdb.update({'acceptance_rate': ac_rate}, prob['id'])
     writeData('data/ac_rate_new2.csv', result)
     pdb.close()
+    adb.close()
     return result
 
 
 def divide(list_data, n):
-    size = len(list_data)
-    each = size//n
-    return [list_data[i*each : min((i+1)*each, size)] for i in range(n)]
+    par_min = 0
+    par_max = 1
+    step = (par_max-par_min)/n
+    cur = []
+    res = [cur]
+    idx = 0
+    max_par = 0
+    for data in list_data:
+        max_par = max(max_par, data[4])
+        if par_min + step*(idx+1) <= data[4]:
+            cur = []
+            res.append(cur)
+            idx += 1
+        cur.append(data)
+    return res
 
 
 title = [
     'contest name',
     'problem id',
     'solved',
-    'contestant',
-    'points',
+    'submissions',
     'acceptance rate',
 ]
 def writeData(filepath, result):
@@ -205,15 +215,15 @@ def initDB():
 
 
 def culcLevels():
-    divisions = 6
+    divisions = 5
     problem_data = acceptanceRatio()
     valid_data = filter(lambda x: x[3] > 30, problem_data)
-    sorted_data = sorted(valid_data, key=itemgetter(5))
+    sorted_data = sorted(valid_data, key=itemgetter(4))
     divided_data = divide(sorted_data, divisions)
 
     for i, level_data in enumerate(divided_data):
         updateLevel(level_data, divisions-i)
-        writeData('data/levels_new/level_%d.csv' % (divisions-i), level_data)
+        writeData('data/levels/level_%d.csv' % (divisions-i), level_data)
 
 
 def updateLevel(data, level):

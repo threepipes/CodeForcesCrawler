@@ -86,19 +86,19 @@ def getStatistics(data, points):
         divisions[user_rating[name]//500] += 1
     divisions = map(str, divisions)
 
-    with open('data/fix_new/wa_%d.csv' % points, 'w') as f:
+    with open('data/fix/wa_%d.csv' % points, 'w') as f:
         f.write('freq,count/submitted_user,count_all,0..499,500..999,1000..1499,1500..1999,2000..2499,2500..2999,3000..3499,3500..3999,submitted_user\n')
         size = len(user_count)
         for key, value in wa.items():
             v_sum = sum(value)
             f.write('%d,%f,%d,%s,%d\n' % (key, v_sum/size, v_sum, ','.join(map(str, value)), size))
-    with open('data/fix_new/fix_%d.csv' % points, 'w') as f:
+    with open('data/fix/fix_%d.csv' % points, 'w') as f:
         f.write('rating,average of wrong submissions,wrong submissions,problems\n')
         for key in counts.keys():
             if probs[key] == -1:
                 continue
             f.write('%d,%f,%d,%d\n' % (user_rating[key], counts[key]/probs[key], counts[key], probs[key]))
-    with open('data/fix_new/user_numbers_rating.csv', 'a') as f:
+    with open('data/fix/user_numbers_rating.csv', 'a') as f:
         # f.write('rating,%s\n' % ','.join(title))
         f.write('%d,%s\n' % (points, ','.join(divisions)))
     print('finish writing for points: '+str(points))
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     print(points)
 
     title = map(str, list(range(0, 4000, 500)))
-    with open('data/fix_new/user_numbers_rating.csv', 'w') as f:
+    with open('data/fix/user_numbers_rating.csv', 'w') as f:
         f.write('rating,%s\n' % ','.join(title))
     for p in sorted(points):
         if p <= 0:
