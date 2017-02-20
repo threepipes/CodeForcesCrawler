@@ -12,63 +12,6 @@ from acceptanceDB import AcceptanceDB
 base_url = 'http://codeforces.com/'
 url = base_url + 'api/'
 
-class ProblemDB:
-    table_name = 'ProblemTable'
-    key = 'id'
-    cols = [
-        'id',
-        'contestId',
-        'prob_index',
-        'points',
-        'level',
-    ]
-
-    def __init__(self):
-        self.con = db.Connector()
-
-    def initTable(self, drop_table=False):
-        prob_table = {
-            'id': 'VARCHAR(20)',
-            'contestId': 'INT(10)',
-            'prob_index': 'VARCHAR(5)',
-            'points': 'INT(5)',
-            'solved': 'INT(5)',
-            'level': 'INT(2)'
-        }
-        self.con.createTable(self.table_name, prob_table, primary_key=self.key, drop=drop_table)
-
-    def addProblem(self, prob_json):
-        points = 0
-        if 'points' in prob_json:
-            points = int(prob_json['points'])
-        data = {
-            'id': str(prob_json['contestId']) + prob_json['index'],
-            'contestId': prob_json['contestId'],
-            'prob_index': prob_json['index'],
-            'points': points,
-        }
-        self.con.insert(data, self.table_name)
-
-    def update(self, prob, keyname):
-        self.con.update(prob, self.table_name, {self.key: keyname})
-
-    def getProblem(self, where):
-        ret = self.con.get(self.table_name, self.cols, where)
-        if len(ret) == 0:
-            return None
-        return ret[0]
-
-    def getProblems(self, where=None):
-        ret = self.con.get(self.table_name, self.cols, where)
-        return ret
-
-    def close(self):
-        self.con.close()
-
-    def commit(self):
-        self.con.commit()
-
-
 def getData(api, option=None):
     request = req.get(url+api, params=option)
     return request.json()
@@ -254,13 +197,13 @@ def setTryAndSolve():
     pdb.close()
 
 
-def getAllSubmissionNumber(contest_id, index):
+def getAllSubmissionNumber(contest_id, index, filter='anyVerdict'):
     time.sleep(0.8)
     url = base_url + '/problemset/status/%d/problem/%s' % (contest_id, index)
     payloads = {
         'action':'setupSubmissionFilter',
         'frameProblemIndex': index,
-        'verdictName': 'anyVerdict',
+        'verdictName': filter,
         'programTypeForInvoker': 'anyProgramTypeForInvoker',
         'comparisonType': 'NOT_USED',
         'judgedTestCount':'',
