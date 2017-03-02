@@ -1,5 +1,6 @@
-from Connector import Connector
 from Database import Database
+import os
+import shutil
 
 class FileDB(Database):
     table_name = 'File'
@@ -29,3 +30,23 @@ class FileDB(Database):
 
     def __init__(self):
         super().__init__(self.table_name, self.key, self.column, self.data_table)
+
+
+def remove_files():
+    fdb = FileDB()
+    file_list = fdb.select(col=['file_name'])
+    files = set()
+    for filename in file_list:
+        files.add(filename['file_name'])
+    # cwd = os.getcwd()
+    dirname = '../data/src/'
+    # print(dirname)
+    src_list = os.listdir(dirname)
+
+    for data in src_list:
+        if data in files:
+            continue
+        shutil.move(dirname+data, '../data/tmp')
+
+if __name__ == '__main__':
+    remove_files()

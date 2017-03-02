@@ -15,10 +15,10 @@ def mapToStr(data, separator=',', connector='='):
 class Connector:
     def __init__(self):
         self.connector = mc.connect(
-            user='testuser',
-            passwd='testuser',
+            user='root',
+            passwd='313128os',
             host='localhost',
-            db='test',
+            db='testcf',
             buffered=True)
 
         self.cur = self.connector.cursor()

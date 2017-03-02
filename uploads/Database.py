@@ -37,8 +37,10 @@ class Database:
     def update(self, keyname, update_data):
         self.con.update(update_data, self.table_name, {self.key: keyname})
 
-    def select(self, where=None, limit=-1):
-        return self.con.get(self.table_name, self.column, where, limit)
+    def select(self, col=None, where=None, limit=-1):
+        if col is None:
+            col = self.column
+        return self.con.get(self.table_name, col, where, limit)
 
     def count(self):
         return self.con.count(self.table_name)
