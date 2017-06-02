@@ -11,7 +11,6 @@ class ContestDB(Database):
         'name',
         'start_time',
         'duration_time',
-        'division',
         'participants'
     ]
     key = 'competition_id'
@@ -20,7 +19,6 @@ class ContestDB(Database):
         'name': 'VARCHAR(200)',
         'start_time': 'DATETIME',
         'duration_time': 'INT(10)',
-        'division': 'INT(2)',
         'participants': 'INT(6)'
     }
 

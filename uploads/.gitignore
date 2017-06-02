@@ -1,0 +1,7 @@
+/data/
+/data_plot/
+/data_sk/
+
+*.cpp
+*.src
+*.png

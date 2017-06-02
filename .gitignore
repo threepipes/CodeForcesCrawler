@@ -8,3 +8,5 @@
 *.html
 .pylintrc
 *.pyc
+*.png
+*.list

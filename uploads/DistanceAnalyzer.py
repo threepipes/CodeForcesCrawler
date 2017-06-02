@@ -95,6 +95,7 @@ def append_dict(dic, key, value):
 
 
 def statistics_distances(dists):
+    
     return dists
 
 
@@ -110,6 +111,10 @@ def analyze_user_files(jar_path, files):
     for line in pipe.readlines():
         data = json.loads(line.decode('utf-8').strip())
         result.append(statistics_distances(data))
+        # for f, d in zip(files, data):
+        #     if d > 300:
+        #         print(f, d)
+        #         break
     return result
 
 
@@ -210,10 +215,56 @@ def test_part():
 
     for i, userdata in enumerate(user_list[16:20]):
         name = userdata['user_name']
-        print(name)
+        print(userdata)
         user_result = analyze_user(name, fdb)
+        print(user_result)
         row = result_to_row(userdata, user_result)
     fdb.close()
 
+def boxplot_dist():
+    udb = UserDB()
+    user_list = udb.select(col=['user_name', 'rating'])
+    udb.close()
+    fdb = FileDB()
+
+    dist_high = []
+    dist_low = []
+    dist_mid = []
+    for i, userdata in enumerate(user_list):
+        name = userdata['user_name']
+        print(name, i)
+        user_result = analyze_user(name, fdb)
+        # row = result_to_row(userdata, user_result)
+        for sub_data in user_result:
+            count = 0
+            d_sum = 0
+            for dist in sub_data['statistics']:
+                d_sum += dist
+                count += 1
+            if count == 0:
+                continue
+            d_sum /= count
+
+            if d_sum > 300:
+                continue
+            if userdata['rating'] >= 2000:
+                dist_high.append(d_sum)
+            elif userdata['rating'] <= 1500:
+                dist_low.append(d_sum)
+            else:
+                dist_mid.append(d_sum)
+
+    # length = min(len(dist_high), len(dist_low), len(dist_mid))
+    data = [
+        {'label': '-1400', 'data': dist_low},
+        {'label': '1401-2000', 'data': dist_mid},
+        {'label': '2001-', 'data': dist_high}
+    ]
+    import boxplot as bp
+    bp.boxplot(data, ('edit distance', 'rating'), path='tmp.png')
+
+    fdb.close()
+
+
 if __name__ == '__main__':
-    analyze_all()
+    boxplot_dist()

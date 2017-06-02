@@ -1,4 +1,5 @@
 from Database import Database
+import csv
 
 class AcceptanceDB(Database):
     table_name = 'Acceptance'
@@ -24,3 +25,27 @@ class AcceptanceDB(Database):
 
     def __init__(self):
         super(AcceptanceDB, self).__init__(self.table_name, self.key, self.column, self.data_table)
+
+
+def fix_rate():
+    csv_path = 'C:/Work/Python/Lab/CodeForcesCrawler/data/fix/ac_rate.csv'
+    data = []
+    with open(csv_path) as f:
+        for line in csv.reader(f):
+            data.append(line)
+    data = data[1:]
+    adb = AcceptanceDB()
+    for row in data:
+        pid = row[1]
+        solved = row[2]
+        submission = row[3]
+        ac_rate = row[4]
+        adb.update(pid, {
+            'solved': solved,
+            'submission': submission,
+            'acceptance_rate': ac_rate
+        })
+    adb.commit()
+
+if __name__ == '__main__':
+    fix_rate()
