@@ -174,12 +174,21 @@ if __name__ == '__main__':
         spl = arg.split('=')
         option[spl[0]] = spl[1]
 
-    command_dict = {
-        'task': 'dist',
-        'method': option['method']
-    }
-    if command_dict['method'] == 'ngram':
-        command_dict['n'] = 1
+    # syntax -> task:dist, method:syntax
+    # ngram -> task:ngram, n:1
+    if option['method'] == 'syntax':
+        command_dict = {
+            'task': 'dist',
+            'method': 'syntax'
+        }
+    elif option['method'] == 'ngram':
+        command_dict = {
+            'task': 'ngram',
+            'n': 1
+        }
+    else:
+        print('Method specifing error.')
+        sys.exit()
     if option['base'] == 'acc':
         analyzer_class = SyntaxAnalyzer
         lim = [-0.5, 0.5]
