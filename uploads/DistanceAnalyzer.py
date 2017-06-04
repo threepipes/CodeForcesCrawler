@@ -6,6 +6,8 @@ import json
 import copy
 import time
 
+import numpy as np
+
 
 class LevelStat:
     def __init__(self, level):
@@ -95,12 +97,17 @@ def append_dict(dic, key, value):
 
 
 def statistics_distances(dists):
-    
     return dists
 
 
 tmpfile = '../data/filelist_comp.txt'
 def analyze_user_files(jar_path, files):
+    """
+    あるユーザに関して，
+    問題ごとの提出リストが与えられる
+    各問題の提出リストについて，隣接提出の差分を計算し，
+    差分行列 result[][] を返す
+    """
     with open(tmpfile, 'w') as f:
         for row in files:
             f.write(' '.join(row['content'])+'\n')
@@ -108,18 +115,27 @@ def analyze_user_files(jar_path, files):
     cmd = ['java', '-jar', jar_path, '-comp', tmpfile]
     pipe = Popen(cmd, cwd='../data', stdout=PIPE, stderr=None).stdout
     result = []
+    # idx = 0 # debug
     for line in pipe.readlines():
         data = json.loads(line.decode('utf-8').strip())
         result.append(statistics_distances(data))
-        # for f, d in zip(files, data):
+        # --- debug ---
+        # for f, d in zip(files[idx]['content'], data):
         #     if d > 300:
-        #         print(f, d)
+        #         print(data)
+        #         print(files[idx]['content'])
         #         break
+        # idx += 1
     return result
 
 
 base_dir = 'C:/Work/Python/Lab/CodeForcesCrawler/data/src/'
 def repack_files(file_lists: dict):
+    """
+    (問題番号:提出リスト) の形式で保持している辞書を，
+    (pid:問題番号, content:提出リスト) のリストに変更する
+    順序を保持する必要があるため
+    """
     result = []
     for pid, files in file_lists.items():
         sub_list = []
@@ -134,7 +150,15 @@ def repack_files(file_lists: dict):
 jar_path = 'analyze.jar'
 file_filter = set(['GNU C++14', 'GNU C++11', 'GNU C++'])
 def analyze_user(username: str, fdb: FileDB):
+    """
+    与えられたユーザに関して，
+    {pid:問題番号, statistics:差分配列} を計算して返す
+    差分配列とは，提出を時系列で並べたとき，
+    隣接する提出の編集距離を要素とする配列である
+    """
     file_data = fdb.select(where={'user_name': username})
+
+    # 提出を問題番号ごとにまとめる
     file_lists = {}
     for data in file_data:
         if data['timestamp'] is None:
@@ -142,7 +166,7 @@ def analyze_user(username: str, fdb: FileDB):
         else:
             data['timestamp'] = int(time.mktime(data['timestamp'].timetuple()))
     for data in sorted(file_data, key=lambda x: x['timestamp']):
-        if not data['lang'] in file_filter:
+        if not data['lang'] in file_filter or data['during_competition'] == 0:
             continue
         append_dict(file_lists, data['problem_id'], data)
 
@@ -221,29 +245,131 @@ def test_part():
         row = result_to_row(userdata, user_result)
     fdb.close()
 
+
+stat_types = ['disp', 'max', 'min', 'mean', 'med']
+def make_stat_dict():
+    stat = {}
+    for t in stat_types:
+        stat[t] = [] * len(rating_split)
+    return stat
+
+
+def append_stat(stat: dict, stat_type: str, rating: int, x: float):
+    """
+    statに対してデータxを加える
+    stat: make_stat_dictで作成された辞書．詳細は下のコメント参照
+    stat_type: 分散 or 最大値 or ...
+    rating: データxの持ち主のレーティング
+    """
+    for i, r in enumerate(rating_split):
+        if rating > r:
+            continue
+        stat[stat_type][i].append(x)
+        break
+
+"""
+[方針]
+問題ごと中央値で割って正規化(あり版なし版両方つくる)
+分散，最大値，最小値，平均，中央値 でファイルを分ける
+レーティングで10段階に分割
+単要素はユーザ
+
+norm
+no_norm
+
+特徴>レーティング分割>データ
+例：
+{
+    disp: [
+        [data_0-200],
+        [data_200-400],
+        ...
+        [data_2000-2200],
+        ...
+    ],
+    max: [
+        ...
+    ],
+    ...
+}
+特徴: disp, max, min, mean, med
+レーティング分割: rating_split
+
+
+正規化するために，集計を問題ごとにする or 全要素保持しておく
+下では，全要素保持を行う
+中央値は何使う？
+- 全要素の中央値 -> 異様にsubmitする人がいるとかたよる
+- 個人ごと平均をとり，その中での中央値 -> 複雑にしすぎでは？
+下では全要素の中央値: 十分submitが行われていれば，偏りはない
+"""
+rating_split = [
+    1000, 1300, 1500, 1700, 1900, 2200, 2400, 9999
+]
 def boxplot_dist():
     udb = UserDB()
     user_list = udb.select(col=['user_name', 'rating'])
     udb.close()
     fdb = FileDB()
 
-    dist_high = []
-    dist_low = []
-    dist_mid = []
+    prob_stat = {}
     for i, userdata in enumerate(user_list):
+        """
+        まず正規化のための中央値を計算する
+        user_resultはuserdataに退避
+        """
         name = userdata['user_name']
-        print(name, i)
         user_result = analyze_user(name, fdb)
+        userdata['result'] = user_result
+        print(name, i)
+
+        for sub_data in user_result:
+            pid = sub_data['pid']
+            # for dist in sub_data['statistics']:
+            if not pid in prob_stat:
+                prob_stat[pid] = []
+            prob_stat[pid] += sub_data['statistics']
+
+    # 中央値計算
+    prob_med = {}
+    for pid, stat in prob_stat.items():
+        if len(stat) == 0:
+            prob_med[pid] = 1
+        else:
+            prob_med[pid] = stat[len(stat) // 2]
+
+    print('finish median analyze\nstart analyzing statistics')
+
+    norm = make_stat_dict()
+    no_norm = make_stat_dict()
+
+    # 統計情報を計算
+    for i, userdata in enumerate(user_list):
+        """
+        中央値で割って正規化した個人の差分リストと，
+        正規化していない差分リストを作成する
+        その後，個人のデータを作成する TODO
+        """
+        name = userdata['user_name']
+        user_result = userdata['result']
+        if (i + 1) % 100 == 0:
+            print(i + 1)
+        diff_list = []
+
         # row = result_to_row(userdata, user_result)
         for sub_data in user_result:
+            pid = sub_data['pid']
             count = 0
             d_sum = 0
             for dist in sub_data['statistics']:
+                if dist == 0:
+                    continue
                 d_sum += dist
                 count += 1
             if count == 0:
                 continue
             d_sum /= count
+            diff_list.append(d_sum)
 
             if d_sum > 300:
                 continue
@@ -253,6 +379,7 @@ def boxplot_dist():
                 dist_low.append(d_sum)
             else:
                 dist_mid.append(d_sum)
+        print(name, userdata['rating'], i, diff_list)
 
     # length = min(len(dist_high), len(dist_low), len(dist_mid))
     data = [
