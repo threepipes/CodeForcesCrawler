@@ -8,6 +8,8 @@ class Analyzer:
     WORKING_DIR = '../data/'
     LIST_FILE = 'file_list.list'
     RESULT_FILE = 'output.data'
+    LOG_FILE = 'log.txt'
+    LOG_LEVEL = 'all'
     DEFAULT_COMMAND = [
         'java', '-jar', 'analyzer.jar'
     ]
@@ -15,6 +17,8 @@ class Analyzer:
         'task': 'test',
         'inpath': LIST_FILE,
         'outpath': RESULT_FILE,
+        'logfile': LOG_FILE,
+        'loglevel': LOG_LEVEL
     }
 
     def __init__(self, file_chooser):
