@@ -1,11 +1,12 @@
+import json
+import copy
+import time
 from subprocess import *
 from fileDB import FileDB
 from userDB import UserDB
 from acceptanceDB import AcceptanceDB
-import json
-import copy
-import time
 
+import boxplot as bp
 import numpy as np
 
 
@@ -166,6 +167,7 @@ def analyze_user(username: str, fdb: FileDB):
         else:
             data['timestamp'] = int(time.mktime(data['timestamp'].timetuple()))
     for data in sorted(file_data, key=lambda x: x['timestamp']):
+        # フィルタリング: C++ かつ コンテスト最中
         if not data['lang'] in file_filter or data['during_competition'] == 0:
             continue
         append_dict(file_lists, data['problem_id'], data)
@@ -250,7 +252,7 @@ stat_types = ['disp', 'max', 'min', 'mean', 'med']
 def make_stat_dict():
     stat = {}
     for t in stat_types:
-        stat[t] = [] * len(rating_split)
+        stat[t] = [[] for _ in range(len(rating_split))]
     return stat
 
 
@@ -266,6 +268,38 @@ def append_stat(stat: dict, stat_type: str, rating: int, x: float):
             continue
         stat[stat_type][i].append(x)
         break
+
+
+def add_statistics(diff_list: list, rating: int, stat_dict: dict):
+    """
+    あるユーザの差分配列を，stat_dictに加える
+    分散 ～ 中央値
+    """
+    if len(diff_list) == 0:
+        return
+    dlist = np.array(diff_list)
+    append_stat(stat_dict, 'disp', rating, np.var(dlist))
+    append_stat(stat_dict, 'max', rating, np.max(dlist))
+    append_stat(stat_dict, 'min', rating, np.min(dlist))
+    append_stat(stat_dict, 'mean', rating, np.mean(dlist))
+    append_stat(stat_dict, 'med', rating, np.median(dlist))
+
+
+def plot_statistics(stat_dict: dict, prefix: str):
+    """
+    編集距離の分散や中央値などの統計データであるstat_dictをplotする
+    prefixは図の名前の先頭につける(正規化・非正規化の区別用)
+    """
+    for key, data_list in stat_dict.items():
+        # {label:レーティング, data:統計データ(list)} の配列を作る
+        plot_data = []
+        for rating, data in zip(rating_split, data_list):
+            plot_data.append({
+                'label': '-%d' % rating,
+                'data': data
+            })
+        save_path = '%s_%s.png' % (prefix, key)
+        bp.boxplot(plot_data, ('edit distance', 'rating'), path=save_path)
 
 """
 [方針]
@@ -337,6 +371,9 @@ def boxplot_dist():
             prob_med[pid] = 1
         else:
             prob_med[pid] = stat[len(stat) // 2]
+            if prob_med[pid] == 0:
+                print('Warning: Median is 0.')
+                prob_med[pid] = 1
 
     print('finish median analyze\nstart analyzing statistics')
 
@@ -355,40 +392,24 @@ def boxplot_dist():
         if (i + 1) % 100 == 0:
             print(i + 1)
         diff_list = []
+        diff_list_norm = []
 
         # row = result_to_row(userdata, user_result)
         for sub_data in user_result:
             pid = sub_data['pid']
-            count = 0
-            d_sum = 0
+            pmed = prob_med[pid]
             for dist in sub_data['statistics']:
                 if dist == 0:
                     continue
-                d_sum += dist
-                count += 1
-            if count == 0:
-                continue
-            d_sum /= count
-            diff_list.append(d_sum)
+                diff_list.append(dist)
+                diff_list_norm.append(dist / pmed)
 
-            if d_sum > 300:
-                continue
-            if userdata['rating'] >= 2000:
-                dist_high.append(d_sum)
-            elif userdata['rating'] <= 1500:
-                dist_low.append(d_sum)
-            else:
-                dist_mid.append(d_sum)
-        print(name, userdata['rating'], i, diff_list)
+        add_statistics(diff_list, userdata['rating'], no_norm)
+        add_statistics(diff_list_norm, userdata['rating'], norm)
 
     # length = min(len(dist_high), len(dist_low), len(dist_mid))
-    data = [
-        {'label': '-1400', 'data': dist_low},
-        {'label': '1401-2000', 'data': dist_mid},
-        {'label': '2001-', 'data': dist_high}
-    ]
-    import boxplot as bp
-    bp.boxplot(data, ('edit distance', 'rating'), path='tmp.png')
+    plot_statistics(norm, 'normalized')
+    plot_statistics(no_norm, 'raw')
 
     fdb.close()
 
