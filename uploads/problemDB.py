@@ -59,3 +59,36 @@ class ProblemStatDB(Database):
         for row in self.select():
             result[row[self.key]] = row
         return result
+
+
+def score_graph():
+    path = './problem_info/'
+    pdb = ProblemDB()
+    scores = {}
+    for prob in pdb.select():
+        sc = prob['points']
+        if sc is None:
+            sc = -1
+        if sc not in scores:
+            scores[sc] = 0
+        scores[sc] += 1
+
+    from matplotlib import pyplot as plt
+
+    x = []
+    y = []
+    label = []
+    for i, key in enumerate(sorted(scores.keys())):
+        x.append(i)
+        y.append(scores[key])
+        label.append(str(key))
+
+    plt.figure(figsize=(30, 8))
+    plt.bar(x, y, align='center')
+    plt.xticks(x, label)
+    plt.savefig(path + 'score_distribution.png')
+    plt.close()
+
+
+if __name__ == '__main__':
+    score_graph()
