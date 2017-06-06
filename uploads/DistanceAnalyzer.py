@@ -249,6 +249,19 @@ def test_part():
     fdb.close()
 
 
+def stat_method(method: str, data):
+    if method == 'disp':
+        return float(np.var(data))
+    elif method == 'max':
+        return int(np.max(data))
+    elif method == 'min':
+        return int(np.min(data))
+    elif method == 'mean':
+        return float(np.mean(data))
+    else:
+        return int(np.median(data))
+
+
 stat_types = ['disp', 'max', 'min', 'mean', 'med']
 def make_stat_dict():
     stat = {}
@@ -279,11 +292,8 @@ def add_statistics(diff_list: list, rating: int, stat_dict: dict):
     if len(diff_list) == 0:
         return
     dlist = np.array(diff_list)
-    append_stat(stat_dict, 'disp', rating, np.var(dlist))
-    append_stat(stat_dict, 'max', rating, np.max(dlist))
-    append_stat(stat_dict, 'min', rating, np.min(dlist))
-    append_stat(stat_dict, 'mean', rating, np.mean(dlist))
-    append_stat(stat_dict, 'med', rating, np.median(dlist))
+    for method in stat_types:
+        append_stat(stat_dict, method, rating, stat_method(method, dlist))
 
 
 def plot_statistics(stat_dict: dict, prefix: str, ylim_list: dict):
@@ -419,6 +429,7 @@ def boxplot_dist():
 
     print('finish median analyze\nstart analyzing statistics')
 
+
     norm = make_stat_dict()
     no_norm = make_stat_dict()
     norm_sub = make_stat_dict() # ファイルサイズの中央値で正規化
@@ -444,7 +455,7 @@ def boxplot_dist():
         # row = result_to_row(userdata, user_result)
         for sub_data in user_result:
             pid = sub_data['pid']
-            pmed = prob_med[pid]
+            pmed = prob_med[pid] / 100
             if pid in prob_size_stat:
                 pmed_size = prob_size_stat[pid]['filesize_mean']
             else:
@@ -469,6 +480,15 @@ def boxplot_dist():
     plot_statistics(norm_sub, 'boxplot/normalized_filesize', ylim_data['norm_sub'])
 
     fdb.close()
+
+
+def init_data_layer(base_layer):
+    layers = [
+        base_layer,
+        ['norm_med', 'norm_file', 'raw'],
+        stat_types,
+        rating_split
+    ]
 
 
 if __name__ == '__main__':
