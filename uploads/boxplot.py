@@ -10,11 +10,11 @@ def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
     title: 保存パス
           未指定なら保存しないで表示
     """
-    fig = plt.figure(figsize=(30, 30))
+    fig = plt.figure(figsize=(15, 15))
     ax = fig.add_subplot(111)
     data = [d['data'] for d in data_list]
     label = [d['label'] for d in data_list]
-    ax.boxplot(data)
+    bp = ax.boxplot(data)
     ax.set_xticklabels(label)
     plt.title('boxplot')
     plt.grid()
@@ -22,8 +22,14 @@ def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
     plt.xlabel(label_vh[1])
     if ylim:
         plt.ylim(ylim)
+    else:
+        ylim_max = 0
+        for whisker in bp['whiskers']:
+            ylim_max = max(ylim_max, whisker.get_ydata()[1])
+        plt.ylim((0, ylim_max * 1.2))
     if path:
         plt.savefig(path)
+        plt.close()
     else:
         plt.show()
 
