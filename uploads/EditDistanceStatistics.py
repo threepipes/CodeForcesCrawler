@@ -96,6 +96,7 @@ def plot_rating_histogram(save_path, rating_list):
     """
     plt.figure(figsize=(20, 20))
     plt.hist(rating_list, bins=100, range=(500, 3000))
+    plt.ylim((0, 200))
     plt.savefig(save_path)
     plt.close()
 
@@ -136,6 +137,19 @@ def main(edb):
         dump_json(json_dir + str(pid) + '.json', data)
 
 
+def rating_statistics():
+    from EditDistancePlot import load_prob_stat
+    save_dir = 'editdistance_statistics/'
+    plot_dir = save_dir + 'rating/'
+    edb = EditDistanceStatisticsDB()
+    prob_stat = load_prob_stat(edb, False)
+    for pid, data in prob_stat:
+        stat, ratings = get_statistics(data)
+        rating_list = np.array(ratings)
+        plot_rating_histogram(plot_dir + str(pid) + '.png', rating_list)
+
+
+
 def init_db():
     edb = EditDistanceStatisticsDB()
     edb.init_table()
@@ -147,5 +161,4 @@ def init_db():
 """
 
 if __name__ == '__main__':
-    edb = init_db()
-    main(edb)
+    rating_statistics()
