@@ -81,13 +81,14 @@ class Connector:
         sentence = 'SELECT %s FROM %s%s%s' % (','.join(col), table, where_sentence, limit_sentence)
         self.cur.execute(sentence)
         result = self.cur.fetchall()
-        res = []
+        # res = []
         for row in result:
             mp = {}
             for key, value in zip(col, row):
                 mp[key] = value
-            res.append(mp)
-        return res
+            # res.append(mp)
+            yield mp
+        # return res
 
     def insert(self, data, table, update=False):
         """data must be dict {DATA_NAME=DATA}"""
