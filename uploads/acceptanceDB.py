@@ -47,5 +47,22 @@ def fix_rate():
         })
     adb.commit()
 
+
+def distribution_plot():
+    path = './problem_info/'
+    file_name = 'acceptance_rate_distribution.png'
+    db = AcceptanceDB()
+    data = []
+    for prob in db.select():
+        data.append(prob['acceptance_rate'])
+
+    from matplotlib import pyplot as plt
+
+    plt.figure(figsize=(20, 8))
+    plt.hist(data, bins=20)
+    plt.savefig(path + file_name)
+    plt.close()
+
+
 if __name__ == '__main__':
-    fix_rate()
+    distribution_plot()
