@@ -89,5 +89,13 @@ def set_submissions_and_solves():
     fdb.close()
 
 
+def check_rating_distribution():
+    udb = UserDB()
+    user_list = sorted(udb.select(), key=lambda x: -x['rating'])
+    for i, user in enumerate(user_list):
+        if (i + 1) % 200 == 0:
+            print(user['rating'], i + 1)
+
+
 if __name__ == '__main__':
-    set_submissions_and_solves()
+    check_rating_distribution()
