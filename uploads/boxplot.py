@@ -10,7 +10,7 @@ def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
     title: 保存パス
           未指定なら保存しないで表示
     """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(30, 30))
     ax = fig.add_subplot(111)
     data = [d['data'] for d in data_list]
     label = [d['label'] for d in data_list]
