@@ -5,6 +5,7 @@ from subprocess import *
 from fileDB import FileDB
 from userDB import UserDB
 from acceptanceDB import AcceptanceDB
+from problemDB import ProblemStatDB
 
 import boxplot as bp
 import numpy as np
@@ -285,7 +286,7 @@ def add_statistics(diff_list: list, rating: int, stat_dict: dict):
     append_stat(stat_dict, 'med', rating, np.median(dlist))
 
 
-def plot_statistics(stat_dict: dict, prefix: str):
+def plot_statistics(stat_dict: dict, prefix: str, ylim_list: dict):
     """
     編集距離の分散や中央値などの統計データであるstat_dictをplotする
     prefixは図の名前の先頭につける(正規化・非正規化の区別用)
@@ -299,7 +300,36 @@ def plot_statistics(stat_dict: dict, prefix: str):
                 'data': data
             })
         save_path = '%s_%s.png' % (prefix, key)
-        bp.boxplot(plot_data, ('edit distance', 'rating'), path=save_path)
+        bp.boxplot(
+            plot_data,
+            label_vh=('edit distance', 'rating'),
+            path=save_path,
+            ylim=ylim_list[key]
+        )
+
+ylim_data = {
+    'norm': {
+        'disp': (0, 10000),
+        'max': (0, 500),
+        'min': (0, 10),
+        'mean': (0, 50),
+        'med': (0, 10),
+    },
+    'no_norm': {
+        'disp': (0, 50000),
+        'max': (0, 2000),
+        'min': (0, 10),
+        'mean': (0, 300),
+        'med': (0, 100),
+    },
+    'norm_sub': {
+        'disp': (0, 1000),
+        'max': (0, 500),
+        'min': (0, 10),
+        'mean': (0, 100),
+        'med': (0, 100),
+    }
+}
 
 """
 [方針]
@@ -327,6 +357,18 @@ no_norm
     ...
 }
 特徴: disp, max, min, mean, med
+[normalized]
+disp: 不明 -> 10000以上除外
+max: 最大3000超え，だいたい200? -> 500以上除外
+min: 小さすぎて不明 -> 10以上除外
+mean: だいたい10くらい, 最大300ちょい -> 50以上除外
+med: 小さすぎて不明 -> 10以上除外
+[raw]
+disp: 不明 -> とりあえず50000以上除外
+max: 最大14000超え -> 2000以上除外
+min: 小さすぎて不明 -> 10以上除外
+mean: だいたい100くらい, 最大1400 -> 300以上除外
+med: 小さすぎて不明 -> 100以上除外
 レーティング分割: rating_split
 
 
@@ -338,7 +380,7 @@ no_norm
 下では全要素の中央値: 十分submitが行われていれば，偏りはない
 """
 rating_split = [
-    1000, 1300, 1500, 1700, 1900, 2200, 2400, 9999
+    1100, 1200, 1300, 1400, 1500, 1600, 1700, 1900, 2200, 9999
 ]
 def boxplot_dist():
     udb = UserDB()
@@ -379,13 +421,17 @@ def boxplot_dist():
 
     norm = make_stat_dict()
     no_norm = make_stat_dict()
+    norm_sub = make_stat_dict() # ファイルサイズの中央値で正規化
+    # 問題ごとのファイルサイズの統計情報取得
+    psdb = ProblemStatDB()
+    prob_size_stat = psdb.get_prob_stat_dict()
 
     # 統計情報を計算
     for i, userdata in enumerate(user_list):
         """
         中央値で割って正規化した個人の差分リストと，
         正規化していない差分リストを作成する
-        その後，個人のデータを作成する TODO
+        その後，個人のデータを作成する
         """
         name = userdata['user_name']
         user_result = userdata['result']
@@ -393,23 +439,34 @@ def boxplot_dist():
             print(i + 1)
         diff_list = []
         diff_list_norm = []
+        diff_list_norm_sub = []
 
         # row = result_to_row(userdata, user_result)
         for sub_data in user_result:
             pid = sub_data['pid']
             pmed = prob_med[pid]
+            if pid in prob_size_stat:
+                pmed_size = prob_size_stat[pid]['filesize_mean']
+            else:
+                pmed_size = -1
             for dist in sub_data['statistics']:
                 if dist == 0:
                     continue
                 diff_list.append(dist)
                 diff_list_norm.append(dist / pmed)
+                if pmed_size > 0:
+                    diff_list_norm_sub.append(dist / pmed_size)
+
 
         add_statistics(diff_list, userdata['rating'], no_norm)
         add_statistics(diff_list_norm, userdata['rating'], norm)
+        add_statistics(diff_list_norm_sub, userdata['rating'], norm_sub)
+
 
     # length = min(len(dist_high), len(dist_low), len(dist_mid))
-    plot_statistics(norm, 'normalized')
-    plot_statistics(no_norm, 'raw')
+    plot_statistics(norm, 'boxplot/normalized', ylim_data['norm'])
+    plot_statistics(no_norm, 'boxplot/raw', ylim_data['no_norm'])
+    plot_statistics(norm_sub, 'boxplot/normalized_filesize', ylim_data['norm_sub'])
 
     fdb.close()
 
