@@ -11,8 +11,10 @@ from acceptanceDB import AcceptanceDB
 from problemDB import ProblemDB, ProblemStatDB
 
 
-def update_info(prob_info: dict, db: Database):
+def update_info(prob_info: dict, db: Database, filtering=None):
     for prob in db.select():
+        if filtering and not filtering(prob):
+            continue
         pid = prob['problem_id']
         if pid not in prob_info:
             prob_info[pid] = {'count': 1}
@@ -31,10 +33,10 @@ def get_problem_info():
     pdb = ProblemDB()
     psdb = ProblemStatDB()
     prob_info = {}
-    update_info(prob_info, edb)
+    update_info(prob_info, edb, lambda x: x['mean'] < 400)
     update_info(prob_info, adb)
     update_info(prob_info, pdb)
-    update_info(prob_info, psdb)
+    update_info(prob_info, psdb, lambda x: x['filesize_mean'] < 20000)
     edb.close()
     adb.close()
     pdb.close()
@@ -60,9 +62,10 @@ def plot_data(prob_info: dict, key_x: str, key_y: str, save_path: str):
     plt.figure(figsize=(20, 20))
     plt.ylabel(key_y)
     plt.xlabel(key_x)
-    plt.scatter(x, y, c=['w' for _ in x])
-    for i in range(len(label)):
-        plt.text(x[i], y[i], label, fontdict={'size': 9, 'color': (0, 0, 1)})
+    # plt.scatter(x, y, c=['w' for _ in x])
+    plt.scatter(x, y)
+    # for i in range(len(label)):
+    #     plt.text(x[i], y[i], label, fontdict={'size': 9, 'color': (0, 0, 1)})
     plt.savefig(save_path)
     plt.close()
 

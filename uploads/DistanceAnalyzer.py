@@ -250,16 +250,20 @@ def test_part():
 
 
 def stat_method(method: str, data):
+    """
+    dataが正規化済みの値である場合もあるので，
+    intに変換するのは間違い
+    """
     if method == 'disp':
         return float(np.var(data))
     elif method == 'max':
-        return int(np.max(data))
+        return float(np.max(data))
     elif method == 'min':
-        return int(np.min(data))
+        return float(np.min(data))
     elif method == 'mean':
         return float(np.mean(data))
     else:
-        return int(np.median(data))
+        return float(np.median(data))
 
 
 stat_types = ['disp', 'max', 'min', 'mean', 'med']

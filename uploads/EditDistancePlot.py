@@ -180,19 +180,18 @@ def plot_editdistance_statistics(label_matcher, prob_stat, save_path):
         plot_statistics(stat, save_path, str(label) + '.png')
 
 
-def editdistance_statistics():
-    # この部分を変更すると，問題の分類方式を変えられる
-    matcher = AccLabel()
-    save_path = './editdistance_statistics/by_acc/'
+def editdistance_statistics(matcher, name):
+    save_path = './editdistance_statistics/by_%s/' % name
 
     edb = EditDistanceStatisticsDB()
     raw = 'raw/'
     norm = 'norm/'
     prob_stat = load_prob_stat(edb)
-    plot_editdistance_statistics(matcher, prob_stat, save_path + raw)
+    # plot_editdistance_statistics(matcher, prob_stat, save_path + raw)
     normalize_dataset(prob_stat, edb)
     plot_editdistance_statistics(matcher, prob_stat, save_path + norm)
 
 
 if __name__ == '__main__':
-    editdistance_statistics()
+    editdistance_statistics(AccLabel(), 'acc')
+    editdistance_statistics(ScoreLabel(), 'score')
