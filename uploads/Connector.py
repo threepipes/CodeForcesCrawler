@@ -1,3 +1,4 @@
+import os
 import mysql.connector as mc
 
 
@@ -15,10 +16,10 @@ def mapToStr(data, separator=',', connector='='):
 class Connector:
     def __init__(self):
         self.connector = mc.connect(
-            user='root',
-            passwd='313128os',
+            user=os.getenv('CF_DB_USER', 'root'),
+            passwd=os.getenv('MYSQL_PASS', 'pass'),
             host='localhost',
-            db='testcf',
+            db=os.getenv('CF_DB', 'testcf'),
             buffered=True)
 
         self.cur = self.connector.cursor()
