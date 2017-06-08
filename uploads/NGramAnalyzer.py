@@ -14,7 +14,7 @@ from sklearn.manifold import MDS
 from matplotlib import pyplot as plt
 
 
-base_dir = 'C:/Work/Python/Lab/CodeForcesCrawler/data/extracted/'
+base_dir = os.path.abspath('../data/extracted/')
 jar_path = 'analyze.jar'
 
 def plot(data, labels, filename):

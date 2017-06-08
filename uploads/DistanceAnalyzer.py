@@ -1,3 +1,4 @@
+import os
 import json
 import copy
 import time
@@ -131,7 +132,7 @@ def analyze_user_files(jar_path, files):
     return result
 
 
-base_dir = 'C:/Work/Python/Lab/CodeForcesCrawler/data/src/'
+base_dir = os.path.abspath('../data/src/')
 def repack_files(file_lists: dict):
     """
     (問題番号:提出リスト) の形式で保持している辞書を，
