@@ -136,5 +136,19 @@ class Connector:
         tables = self.cur.fetchall()
         return (table,) in tables
 
+    def tables(self):
+        self.cur.execute('SHOW TABLES')
+        tables = self.cur.fetchall()
+        return tables
+
     def commit(self):
         self.connector.commit()
+
+
+def test():
+    con = Connector()
+    print(con.tables())
+
+
+if __name__ == '__main__':
+    test()

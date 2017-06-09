@@ -1,3 +1,4 @@
+import os
 from Database import Database
 import csv
 
@@ -28,21 +29,13 @@ class AcceptanceDB(Database):
 
 
 def fix_rate():
-    csv_path = 'C:/Work/Python/Lab/CodeForcesCrawler/data/fix/ac_rate.csv'
-    data = []
-    with open(csv_path) as f:
-        for line in csv.reader(f):
-            data.append(line)
-    data = data[1:]
     adb = AcceptanceDB()
-    for row in data:
-        pid = row[1]
-        solved = row[2]
-        submission = row[3]
-        ac_rate = row[4]
+    for row in adb.select():
+        pid = row['problem_id']
+        solved = row['solved']
+        submission = row['submission']
+        ac_rate = min(1, solved / submission)
         adb.update(pid, {
-            'solved': solved,
-            'submission': submission,
             'acceptance_rate': ac_rate
         })
     adb.commit()
@@ -50,6 +43,8 @@ def fix_rate():
 
 def distribution_plot():
     path = './problem_info/'
+    if not os.path.exists(path):
+        os.mkdir(path)
     file_name = 'acceptance_rate_distribution.png'
     db = AcceptanceDB()
     data = []

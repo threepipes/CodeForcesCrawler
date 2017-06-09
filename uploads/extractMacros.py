@@ -17,6 +17,9 @@ dst_path = '../data/src_ext/'
 
 reg = r'/\*([^*]|\*[^/])*\*/'
 def copy_ext_file(filename):
+    """
+    C++ファイルについて，define展開を行える形にしてsrc_extにコピー
+    """
     src = os.path.join(src_path, filename)
     dst = os.path.join(dst_path, filename).replace('.src', '.cpp')
     # if os.path.exists(dst):
@@ -39,12 +42,13 @@ def copy_ext_file(filename):
         df.write(buff)
 
 
-def copy_files(filename):
+def copy_files():
     if not os.path.exists(dst_path):
         os.makedirs(dst_path)
 
     fdb = FileDB()
-    file_list = fdb.select()
+    where = ' or '.join(map(lambda x: 'lang="%s"' % x, lang_list))
+    file_list = list(fdb.select(col=['file_name'], where=where))
     size = len(file_list)
 
     print('begin copy files')
@@ -70,9 +74,13 @@ new_path = '../data/extracted/'
 def extract_to_path(filename):
     src = os.path.join(dst_path, filename)
     dst = os.path.join(new_path, filename)
+    if os.path.exists(dst):
+        return
+
     src_data = extract_macro(src)
     with open(dst, 'w', encoding='utf-8') as f:
         f.write(src_data)
+    print('fin')
 
 
 def extract_macros():
@@ -80,8 +88,15 @@ def extract_macros():
     if not os.path.exists(new_path):
         os.makedirs(new_path)
 
-    with Pool(4) as p:
+    with Pool(24) as p:
         p.map(extract_to_path, file_list)
+
+
+def extract_macros_seq():
+    file_list = os.listdir(dst_path)
+    for i, path in enumerate(file_list):
+        print(i)
+        extract_to_path(path)
 
 
 def filter_failed_files():
@@ -113,4 +128,5 @@ def check_files():
 
 
 if __name__ == '__main__':
+    extract_macros()
     check_files()

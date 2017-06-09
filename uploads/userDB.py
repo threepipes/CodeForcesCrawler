@@ -74,11 +74,13 @@ def set_submissions_and_solves():
     fdb = FileDB()
 
     for i, user in enumerate(udb.select()):
-        submissions = fdb.select(where={'user_name': user['user_name']})
+        submissions = list(fdb.select(where={'user_name': user['user_name']}))
         ac_size = get_ac_count(submissions)
+        submission_size = len(submissions)
         usdb.insert({
+            'acceptance_sample': ac_size / submission_size,
             'solved_in_sample': ac_size,
-            'submission_in_sample': len(submissions),
+            'submission_in_sample': submission_size,
             usdb.key: user[usdb.key],
         })
         if (i + 1) % 100 == 0:

@@ -56,7 +56,7 @@ def remove_files():
 def set_is_during_contest():
     fdb = FileDB()
     cdb = ContestDB()
-    contest_list = cdb.select()
+    contest_list = list(cdb.select())
     contests = len(contest_list)
 
     for i, contest in enumerate(contest_list):

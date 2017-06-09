@@ -111,5 +111,9 @@ def mining_contest(contest_db):
     return True
 
 
+def test():
+    cdb = ContestDB()
+    print(list(cdb.select()))
+
 if __name__ == '__main__':
-    set_participants(ContestDB())
+    test()
