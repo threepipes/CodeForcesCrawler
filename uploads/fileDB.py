@@ -4,6 +4,7 @@ from datetime import timedelta
 from Database import Database
 from contestDB import ContestDB
 
+
 class FileDB(Database):
     table_name = 'File'
     key = 'file_name'
