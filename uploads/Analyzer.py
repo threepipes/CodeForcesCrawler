@@ -41,7 +41,7 @@ class CAExecuter:
         2次元の場合は，列はカンマ区切り，行は改行区切り
         """
         with open(self.WORKING_DIR + self.LIST_FILE, 'w', encoding='utf-8') as f:
-            for row in file_list:
+            for row in path_list:
                 if isinstance(row, str):
                     f.write(row + '\n')
                 else:
@@ -87,7 +87,7 @@ class Analyzer(CAExecuter):
 
     def analyze(self, file_filter=None):
         file_list = self.choose_files()
-        if file_filter not is None:
+        if file_filter is not None:
             file_filter.filtering(file_list)
         self.write_list(file_list)
         self.execute()
