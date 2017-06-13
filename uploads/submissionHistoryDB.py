@@ -4,6 +4,8 @@ from userDB import UserDB
 from fileDB import FileDB
 from Analyzer import CAExecuter
 
+from fileDB_util import base_selection
+
 
 class SubmissionHistoryDB(Database):
     table_name = 'SubmissionDistance'
@@ -104,19 +106,23 @@ def store_user_statistics(
     if exist_user(user_name, fdb, sdb):
         return
     pid_list, hist_list = get_history_list(user_name, fdb, 'src/')
-    analyzer.set_command({'task': 'diff', 'method': 'gumtree'})
-    analyzer.write_list(hist_list)
-    analyzer.execute()
-    result_gt = analyzer.read_result()
-    result_gt = parse_gumtree_result(result_gt)
-    analyzer.set_command({'task': 'diff', 'method': 'leven'})
-    analyzer.execute()
-    result_lv = analyzer.read_result()
+    try:
+        analyzer.set_command({'task': 'diff', 'method': 'gumtree'})
+        analyzer.write_list(hist_list)
+        analyzer.execute()
+        result_gt = analyzer.read_result()
+        result_gt = parse_gumtree_result(result_gt)
+        analyzer.set_command({'task': 'diff', 'method': 'leven'})
+        analyzer.execute()
+        result_lv = analyzer.read_result()
+    except:
+        print('error during analyze: ' + user_name)
+        return
     store_user_result(hist_list, result_gt, result_lv, sdb)
 
 
 def exist_user(user_name, fdb, sdb):
-    where_file = {'user_name': user_name, 'during_competition': 1}
+    where_file = ["user_name='%s'" % user_name] + base_selection
     repr_files = list(fdb.select(where=where_file, limit=1))
     if len(repr_files) == 0:
         return True
