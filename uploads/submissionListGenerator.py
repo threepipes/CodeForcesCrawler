@@ -1,3 +1,4 @@
+import time
 from fileDB import FileDB
 
 lang_filter = set(['GNU C++14', 'GNU C++11', 'GNU C++'])
@@ -17,7 +18,8 @@ def generate_submission_history_list(username: str, fdb: FileDB):
     (lang_filterに属する言語のみ)
     """
     file_lists = {}
-    for data in fdb.select(where={'user_name': username}):
+    file_data = list(fdb.select(where={'user_name': username}))
+    for data in file_data:
         if data['timestamp'] is None:
             data['timestamp'] = -1
         else:
@@ -56,6 +58,6 @@ def get_history_list(username: str, fdb: FileDB, prefix=''):
     prefixを指定することで，ファイルのパスを示す
     """
     pid_list, history_list = generate_submission_history_list(username, fdb)
-    filename_list = extract_filenames(history_list, prefix='')
+    filename_list = extract_filenames(history_list, prefix=prefix)
 
     return pid_list, filename_list
