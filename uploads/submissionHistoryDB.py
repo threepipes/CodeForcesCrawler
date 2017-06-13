@@ -16,7 +16,8 @@ class SubmissionHistoryDB(Database):
         'levenshtein_distance',
         'add_node',
         'delete_node',
-        'update_node'
+        'update_node',
+        'move_node',
     ]
     data_table = {
         'file_name': 'VARCHAR(50)',
@@ -25,7 +26,8 @@ class SubmissionHistoryDB(Database):
         'levenshtein_distance': 'INT(5)',
         'add_node': 'INT(4)',
         'delete_node': 'INT(4)',
-        'update_node': 'INT(4)'
+        'update_node': 'INT(4)',
+        'move_node': 'INT(4)',
     }
 
     def __init__(self):
@@ -37,12 +39,12 @@ def parse_gumtree_result(user_result):
     CodeAnalyzerのgumtreediffによる結果をパースする
     各提出について，(add, delete, update)のタプルに変換した結果を返す
     """
-    table = {'insert': 0, 'delete': 1, 'update': 2}
+    table = {'insert': 0, 'delete': 1, 'update': 2, 'move': 3}
     result = []
     for row in user_result:
         row_result = []
         for col in row:
-            act_count = (0, 0, 0)
+            act_count = [0, 0, 0, 0]
             for act in col['actions']:
                 act_count[table[act['action']]] += 1
             row_result.append(act_count)
@@ -68,12 +70,14 @@ def store_user_result(hist_list, result_gt, result_lv, sdb):
                 add = gumtree_data[0]
                 delete = gumtree_data[1]
                 update = gumtree_data[2]
+                move = gumtree_data[3]
             else:
                 next_file = '-'
                 leven_dist = 0
                 add = 0
                 delete = 0
                 update = 0
+                move = 0
             submission_index = j + 1
             sdb.insert({
                 'file_name': file_name,
@@ -82,30 +86,42 @@ def store_user_result(hist_list, result_gt, result_lv, sdb):
                 'levenshtein_distance': leven_dist,
                 'add_node': add,
                 'delete_node': delete,
-                'update_node': update
+                'update_node': update,
+                'move_node': move,
             })
     sdb.commit()
 
 
-def store_user_statistics( \
-        user_name: str, \
-        fdb: FileDB, \
-        analyzer: CAExecuter, \
+def store_user_statistics(
+        user_name: str,
+        fdb: FileDB,
+        analyzer: CAExecuter,
         sdb: SubmissionHistoryDB):
     """
     あるuserの提出履歴に対する差分配列を取得し，
     DBに格納する．
     """
+    if exist_user(user_name, fdb, sdb):
+        return
     pid_list, hist_list = get_history_list(user_name, fdb, 'src/')
-    analyzer.set_command({'task': 'dist', 'method': 'gumtree'})
+    analyzer.set_command({'task': 'diff', 'method': 'gumtree'})
     analyzer.write_list(hist_list)
     analyzer.execute()
     result_gt = analyzer.read_result()
     result_gt = parse_gumtree_result(result_gt)
-    analyzer.set_command({'task': 'dist', 'method': 'leven'})
+    analyzer.set_command({'task': 'diff', 'method': 'leven'})
     analyzer.execute()
     result_lv = analyzer.read_result()
     store_user_result(hist_list, result_gt, result_lv, sdb)
+
+
+def exist_user(user_name, fdb, sdb):
+    where_file = {'user_name': user_name, 'during_competition': 1}
+    repr_files = list(fdb.select(where=where_file, limit=1))
+    if len(repr_files) == 0:
+        return True
+    repr_file = repr_files[0]['file_name']
+    return len(list(sdb.select(where={'file_name': repr_file}))) > 0
 
 
 def init_db():
@@ -118,5 +134,10 @@ def init_db():
     sdb = SubmissionHistoryDB()
     sdb.init_table()
     analyzer = CAExecuter()
-    for user in udb.select():
+    for i, user in enumerate(udb.select()):
+        print(user['user_name'], i)
         store_user_statistics(user['user_name'], fdb, analyzer, sdb)
+
+
+if __name__ == '__main__':
+    init_db()
