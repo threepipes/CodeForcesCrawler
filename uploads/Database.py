@@ -1,7 +1,9 @@
 from Connector import Connector
 
+
 class Database:
     foreign_key = None
+
     def __init__(self, table_name, key, column, data_table):
         self.table_name = table_name
         self.key = key
@@ -22,7 +24,7 @@ class Database:
         self.con.close()
 
     def insert(self, insert_data):
-        if not self.key in insert_data:
+        if self.key not in insert_data:
             print('Error: no primary key in insert_data')
             return
         data = {}

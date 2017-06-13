@@ -10,9 +10,10 @@ from acceptanceDB import AcceptanceDB
 from problemDB import ProblemDB
 from EditDistanceStatistics import EditDistanceStatisticsDB
 
+
 def plot_statistics(data_list, path, file_name, ylim=None):
     """
-    data_list: [{rating, diffs}]
+    data_list: [{rating: int, diffs: list}]
     与えられたデータについて，個人ごとに[max, min, med, ...]を計算
     問題ごとに集計をとる
     結果を，path/method(maxなど)/file_nameにplotする
@@ -92,7 +93,7 @@ def normalize_dataset(prob_stat: dict, edb: EditDistanceStatisticsDB):
     for prob in edb.select():
         prob_id = prob['problem_id']
         med = prob['median']
-        if not prob_id in prob_stat:
+        if prob_id not in prob_stat:
             continue
         for user in prob_stat[prob_id]:
             user['diffs'] = list(map(lambda x: x / med, user['diffs']))

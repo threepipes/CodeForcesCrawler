@@ -9,6 +9,7 @@ from userDB import UserDB
 from DistanceAnalyzer import analyze_user
 from Database import Database
 
+
 class EditDistanceStatisticsDB(Database):
     table_name = 'ProblemEditDistance'
     key = 'problem_id'
@@ -32,6 +33,7 @@ class EditDistanceStatisticsDB(Database):
         'solver_rating_mean': 'DOUBLE',
         'solver_rating_median': 'INT',
     }
+
     def __init__(self):
         super(EditDistanceStatisticsDB, self).__init__(
             self.table_name,
@@ -62,7 +64,7 @@ def get_prob_data():
         for sub_data in user_result:
             pid = sub_data['pid']
             # for dist in sub_data['statistics']:
-            if not pid in prob_stat:
+            if pid not in prob_stat:
                 prob_stat[pid] = []
             stat = sub_data['statistics']
             prob_stat[pid].append({
@@ -147,7 +149,6 @@ def rating_statistics():
         stat, ratings = get_statistics(data)
         rating_list = np.array(ratings)
         plot_rating_histogram(plot_dir + str(pid) + '.png', rating_list)
-
 
 
 def init_db():

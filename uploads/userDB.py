@@ -2,6 +2,7 @@ from Connector import Connector
 from Database import Database
 from fileDB import FileDB
 
+
 class UserDB(Database):
     table_name = 'Participant'
     key = 'user_name'
@@ -47,6 +48,7 @@ def get_ac_count(submission_list):
         return 0
     ac_count = filter(lambda x: x['verdict'] == 'OK', submission_list)
     return len(list(ac_count))
+
 
 def set_acceptance_sample():
     usdb = UserSubmissionDB()
