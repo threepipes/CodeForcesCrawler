@@ -13,7 +13,7 @@ class CAExecuter:
     WORKING_DIR = '../data/'
     LIST_FILE = 'file_list.list'
     RESULT_FILE = 'output.data'
-    LOG_FILE = 'log.txt'
+    LOG_FILE = 'file'
     LOG_LEVEL = 'all'
     DEFAULT_COMMAND = [
         'java', '-jar', 'analyzer.jar'
@@ -48,7 +48,7 @@ class CAExecuter:
                     f.write(','.join(row) + '\n')
 
     def execute(self):
-        p = Popen(self.command_list, cwd=self.WORKING_DIR, stdout=PIPE)
+        p = Popen(self.command_list, cwd=self.WORKING_DIR, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         print('finish analyze.')
         return stdout
