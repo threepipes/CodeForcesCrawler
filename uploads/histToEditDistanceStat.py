@@ -45,6 +45,7 @@ def add_data(
     if diff_data['next_file'] == '-':
         return
     rating = user_data['rating']
+    user_name = user_data['user_name']
     for col, col_data in data_dict.items():
         if user_name not in col_data:
             col_data[user_name] = {'rating': rating, 'diffs': []}
@@ -78,32 +79,30 @@ def set_diff_file(prob_id: str):
     data_dict = get_data_dict()
     count = 0
     sub_list = []
-    for sub in get_submissions(prob['problem_id'], sdb):
+    for sub in get_submissions(prob_id, sdb):
         sub_list.append(sub)
         if sub['next_file'] != '-':
             continue
         sub_chain = get_submission_chain(sub_list, fdb)
         if len(sub_chain) < 2:
+            sub_list = []
             continue
         user_data = get_user(sub_chain[0][1]['user_name'], udb)
         for diff_data, file_data in sub_chain[:-1]:
             add_data(data_dict, file_data, diff_data, user_data)
             count += 1
+        sub_list = []
 
     sdb.close()
     fdb.close()
     udb.close()
     if count == 0:
         return
-    generate_diff_file(data_dict, prob)
+    generate_diff_file(data_dict, prob_id)
 
 
 def transport_db_to_json():
-    udb = UserDB()
-    user_dict = generate_dict(udb)
     pdb = ProblemStatDB()
-    fdb = FileDB()
-    sdb = SubmissionHistoryDB()
 
     for col in sdb_col_list:
         if not os.path.exists(save_path_base + col):
