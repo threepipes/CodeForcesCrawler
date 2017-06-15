@@ -13,6 +13,7 @@ class SubmissionHistoryDB(Database):
     column = [
         'file_name',
         'next_file',
+        'problem_id',
         # (user, problem)に対する何番目の提出か
         'submission_index',
         'levenshtein_distance',
@@ -24,6 +25,7 @@ class SubmissionHistoryDB(Database):
     data_table = {
         'file_name': 'VARCHAR(50)',
         'next_file': 'VARCHAR(50)',
+        'problem_id': 'VARCHAR(6)',
         'submission_index': 'INT(3)',
         'levenshtein_distance': 'INT(5)',
         'add_node': 'INT(4)',
@@ -130,6 +132,26 @@ def exist_user(user_name, fdb, sdb):
     return len(list(sdb.select(where={'file_name': repr_file}))) > 0
 
 
+def set_problem_id():
+    fdb = FileDB()
+    sdb = SubmissionHistoryDB()
+    for i, sub_data in enumerate(sdb.select()):
+        if (i + 1) % 1000 == 0:
+            print(i + 1)
+            sdb.commit()
+        if not sub_data['problem_id'] is None:
+            continue
+        name = sub_data['file_name']
+        file_data = list(fdb.select(where={'file_name': name}))
+        if len(file_data) == 0:
+            continue
+        file_data = file_data[0]
+        if file_data['problem_id'] is None:
+            file_data['problem_id'] = '-'
+        sdb.update(name, {'problem_id': file_data['problem_id']})
+    sdb.commit
+
+
 def init_db():
     """
     UserDB, FileDB, sourceから
@@ -149,4 +171,4 @@ def init_db():
 
 
 if __name__ == '__main__':
-    init_db()
+    set_problem_id()

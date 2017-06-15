@@ -10,8 +10,8 @@ from userDB import UserDB
 from problemDB import ProblemDB, ProblemStatDB
 from submissionHistoryDB import SubmissionHistoryDB
 
-from userDB_util import generate_dict
-from fileDB_util import base_selection
+from userDB_util import get_user
+from fileDB_util import get_file
 
 lang_list = ['GNU C++14', 'GNU C++11', 'GNU C++']
 lang_select = '(%s)' % ' or '.join(['lang=' + lang for lang in lang_list])
@@ -19,8 +19,8 @@ sdb_col_list = SubmissionHistoryDB.column[3:]
 save_path_base = './editdistance_statistics/json/'
 
 
-def get_submissions(prob_id: str, fdb: FileDB):
-    return fdb.select(where=(["problem_id='%s'" % prob_id] + base_selection))
+def get_submissions(prob_id: str, sdb: SubmissionHistoryDB):
+    return sdb.select(where=({'problem_id': prob_id}))
 
 
 def get_data_dict():
@@ -39,17 +39,12 @@ def filename_to_username(file_name: str):
 def add_data(
         data_dict: dict,
         file_data: dict,
-        sdb: SubmissionHistoryDB,
-        users: dict):
+        diff_data: dict,
+        user_data: dict):
     file_name = file_data['file_name']
-    diff_data = list(sdb.select(where={'file_name': file_name}))
-    if len(diff_data) == 0:
-        return
-    diff_data = diff_data[0]
     if diff_data['next_file'] == '-':
         return
-    user_name = filename_to_username(file_name)
-    rating = users[user_name]['rating']
+    rating = user_data['rating']
     for col, col_data in data_dict.items():
         if user_name not in col_data:
             col_data[user_name] = {'rating': rating, 'diffs': []}
@@ -57,11 +52,50 @@ def add_data(
         diffs.append(diff_data[col])
 
 
-def generate_diff_file(data_dict: dict, prob: dict):
+def generate_diff_file(data_dict: dict, prob_id: str):
     for col, col_data in data_dict.items():
-        save_path = save_path_base + '%s/%s.json' % (col, prob['problem_id'])
+        save_path = save_path_base + '%s/%s.json' % (col, prob_id)
         with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(list(data_dict[col].values()), f)
+
+
+def get_submission_chain(sub_list: list, fdb: FileDB):
+    has_ac = False
+    chain = []
+    for sub in sub_list:
+        file_data = get_file(sub['file_name'], fdb)
+        chain.append((sub, file_data))
+        if file_data['verdict'] == 'OK' and file_data['during_competition']:
+            return chain
+    return []
+
+
+def set_diff_file(prob_id: str):
+    sdb = SubmissionHistoryDB()
+    fdb = FileDB()
+    udb = UserDB()
+
+    data_dict = get_data_dict()
+    count = 0
+    sub_list = []
+    for sub in get_submissions(prob['problem_id'], sdb):
+        sub_list.append(sub)
+        if sub['next_file'] != '-':
+            continue
+        sub_chain = get_submission_chain(sub_list, fdb)
+        if len(sub_chain) < 2:
+            continue
+        user_data = get_user(sub_chain[0][1]['user_name'], udb)
+        for diff_data, file_data in sub_chain[:-1]:
+            add_data(data_dict, file_data, diff_data, user_data)
+            count += 1
+
+    sdb.close()
+    fdb.close()
+    udb.close()
+    if count == 0:
+        return
+    generate_diff_file(data_dict, prob)
 
 
 def transport_db_to_json():
@@ -80,16 +114,7 @@ def transport_db_to_json():
         column -> user_name -> {rating: int, diffs: list}
         と指定できる辞書上にデータを構築していく
         """
-        print(prob['problem_id'])
-        data_dict = get_data_dict()
-        count = 0
-        for sub in get_submissions(prob['problem_id'], fdb):
-            add_data(data_dict, sub, sdb, user_dict)
-            count += 1
-        if count == 0:
-            continue
-        generate_diff_file(data_dict, prob)
-        break
+        set_diff_file(prob['problem_id'])
 
 
 def test_filename2user():
