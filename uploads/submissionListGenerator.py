@@ -1,5 +1,6 @@
 import time
 from fileDB import FileDB
+from fileDB_util import base_selection
 
 lang_filter = set(['GNU C++14', 'GNU C++11', 'GNU C++'])
 
@@ -18,16 +19,14 @@ def generate_submission_history_list(username: str, fdb: FileDB):
     (lang_filterに属する言語のみ)
     """
     file_lists = {}
-    file_data = list(fdb.select(where={'user_name': username}))
+    file_where = ["user_name='%s'" % username] + base_selection
+    file_data = list(fdb.select(where=file_where))
     for data in file_data:
         if data['timestamp'] is None:
             data['timestamp'] = -1
         else:
             data['timestamp'] = int(time.mktime(data['timestamp'].timetuple()))
     for data in sorted(file_data, key=lambda x: x['timestamp']):
-        # フィルタリング: C++ かつ コンテスト最中
-        if not data['lang'] in lang_filter or data['during_competition'] == 0:
-            continue
         append_dict(file_lists, data['problem_id'], data)
 
     prob_id_list = []
