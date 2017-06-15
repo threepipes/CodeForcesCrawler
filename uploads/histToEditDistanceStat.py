@@ -5,6 +5,8 @@ SubmissionHistoryDBの各列をEditDistancePlot#loadで読み込める形式に�
 import json
 import os
 
+from joblib import Parallel, delayed
+
 from fileDB import FileDB
 from userDB import UserDB
 from problemDB import ProblemDB, ProblemStatDB
@@ -80,6 +82,10 @@ def set_diff_file(prob_id: str):
     count = 0
     sub_list = []
     for sub in get_submissions(prob_id, sdb):
+        """
+        column -> user_name -> {rating: int, diffs: list}
+        と指定できる辞書上にデータを構築していく
+        """
         sub_list.append(sub)
         if sub['next_file'] != '-':
             continue
@@ -101,6 +107,19 @@ def set_diff_file(prob_id: str):
     generate_diff_file(data_dict, prob_id)
 
 
+def transport_db_to_json_parallel():
+    pdb = ProblemStatDB()
+
+    for col in sdb_col_list:
+        if not os.path.exists(save_path_base + col):
+            os.makedirs(save_path_base + col)
+
+    Parallel(n_jobs=-1, varbose=5)(
+        delayed(set_diff_file)
+        (prob['problem_id']) for prob in pdb.select(where='filesize_max_c>0')
+    )
+
+
 def transport_db_to_json():
     pdb = ProblemStatDB()
 
@@ -109,10 +128,6 @@ def transport_db_to_json():
             os.makedirs(save_path_base + col)
 
     for prob in pdb.select(where='filesize_max_c>0'):
-        """
-        column -> user_name -> {rating: int, diffs: list}
-        と指定できる辞書上にデータを構築していく
-        """
         set_diff_file(prob['problem_id'])
 
 
@@ -127,4 +142,7 @@ def test_filename2user():
 
 
 if __name__ == '__main__':
-    transport_db_to_json()
+    import time
+    start = time.time()
+    transport_db_to_json_parallel()
+    print(time.time() - start)
