@@ -2,6 +2,7 @@
 /__pycache__/
 /.vscode/
 /src/
+/tmp/
 *.csv
 *.xlsx
 *.txt
