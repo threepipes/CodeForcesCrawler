@@ -2,6 +2,7 @@ import os
 import json
 
 import numpy as np
+from joblib import Parallel, delayed
 
 from boxplot import boxplot
 from DistanceAnalyzer import rating_split, stat_types, stat_method
@@ -56,7 +57,8 @@ def collect_statistics(data_list: list):
     return data_class
 
 
-json_path = 'editdistance_statistics/json/'
+base_json_path = 'editdistance_statistics/json/'
+json_path = ''
 def load(pid, empty_filter=True):
     """
     [{'rating': int, 'diffs': []}]
@@ -85,14 +87,16 @@ def load_prob_stat(edb: EditDistanceStatisticsDB, empty_filter=True):
     return prob_stat
 
 
-def normalize_dataset(prob_stat: dict, edb: EditDistanceStatisticsDB):
+def normalize_dataset(prob_stat: dict, edb: EditDistanceStatisticsDB, group: str):
     """
     問題の編集距離データが与えられるので，
     それらのdiffsの各値を，diffsの中央値(DBに計算済み)で割る
     """
     for prob in edb.select():
         prob_id = prob['problem_id']
-        med = prob['median']
+        med = prob[group + '_median']
+        if med == 0:
+            med = 1
         if prob_id not in prob_stat:
             continue
         for user in prob_stat[prob_id]:
@@ -181,18 +185,27 @@ def plot_editdistance_statistics(label_matcher, prob_stat, save_path):
         plot_statistics(stat, save_path, str(label) + '.png')
 
 
-def editdistance_statistics(matcher, name):
-    save_path = './editdistance_statistics/by_%s/' % name
+def editdistance_statistics(matcher, group, name):
+    global json_path, base_json_path
+    json_path = base_json_path + group + '/'
+    save_path = './editdistance_statistics/plot/%s/by_%s/' % (group, name)
 
     edb = EditDistanceStatisticsDB()
     raw = 'raw/'
     norm = 'norm/'
     prob_stat = load_prob_stat(edb)
-    # plot_editdistance_statistics(matcher, prob_stat, save_path + raw)
-    normalize_dataset(prob_stat, edb)
+    plot_editdistance_statistics(matcher, prob_stat, save_path + raw)
+    normalize_dataset(prob_stat, edb, group)
     plot_editdistance_statistics(matcher, prob_stat, save_path + norm)
 
 
+def statistics_group(group: str):
+    editdistance_statistics(AccLabel(), group, 'acc')
+    editdistance_statistics(ScoreLabel(), group, 'score')
+
+
 if __name__ == '__main__':
-    editdistance_statistics(AccLabel(), 'acc')
-    editdistance_statistics(ScoreLabel(), 'score')
+    from submissionHistoryDB import SubmissionHistoryDB
+    groups = SubmissionHistoryDB.column[4:-1]
+    print(groups)
+    Parallel(n_jobs=len(groups), verbose=5)(delayed(statistics_group)(g) for g in groups)
