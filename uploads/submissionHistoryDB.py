@@ -21,6 +21,7 @@ class SubmissionHistoryDB(Database):
         'delete_node',
         'update_node',
         'move_node',
+        'node_sum',
     ]
     data_table = {
         'file_name': 'VARCHAR(50)',
@@ -32,6 +33,7 @@ class SubmissionHistoryDB(Database):
         'delete_node': 'INT(4)',
         'update_node': 'INT(4)',
         'move_node': 'INT(4)',
+        'node_sum': 'INT(5)'
     }
 
     def __init__(self):
@@ -56,7 +58,7 @@ def parse_gumtree_result(user_result):
     return result
 
 
-def store_user_result(hist_list, result_gt, result_lv, sdb):
+def store_user_result(hist_list, result_gt, result_lv, sdb, pid_list):
     """
     取得した差分配列をDBに格納
     hist_list: 提出履歴のリスト
@@ -86,12 +88,14 @@ def store_user_result(hist_list, result_gt, result_lv, sdb):
             sdb.insert({
                 'file_name': file_name,
                 'next_file': next_file,
+                'problem_id': pid_list[i],
                 'submission_index': submission_index,
                 'levenshtein_distance': leven_dist,
                 'add_node': add,
                 'delete_node': delete,
                 'update_node': update,
                 'move_node': move,
+                'node_sum': add + delete + update + move,
             })
     sdb.commit()
 
@@ -120,7 +124,7 @@ def store_user_statistics(
     except:
         print('error during analyze: ' + user_name)
         return
-    store_user_result(hist_list, result_gt, result_lv, sdb)
+    store_user_result(hist_list, result_gt, result_lv, sdb, pid_list)
 
 
 def exist_user(user_name, fdb, sdb):
@@ -149,7 +153,7 @@ def set_problem_id():
         if file_data['problem_id'] is None:
             file_data['problem_id'] = '-'
         sdb.update(name, {'problem_id': file_data['problem_id']})
-    sdb.commit
+    sdb.commit()
 
 
 def init_db():
