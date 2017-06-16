@@ -118,10 +118,10 @@ def init_db():
     return edb
 
 
-"""
-問題ごとの編集距離に関する統計をファイルに書き出す
-"""
-
-if __name__ == '__main__':
+def construct():
     edb = init_db()
     set_db(edb)
+
+
+if __name__ == '__main__':
+    construct()
