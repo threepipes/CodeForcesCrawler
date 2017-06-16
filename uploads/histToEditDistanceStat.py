@@ -114,7 +114,7 @@ def transport_db_to_json_parallel():
         if not os.path.exists(save_path_base + col):
             os.makedirs(save_path_base + col)
 
-    Parallel(n_jobs=-1, varbose=5)(
+    Parallel(n_jobs=-1, verbose=5)(
         delayed(set_diff_file)
         (prob['problem_id']) for prob in pdb.select(where='filesize_max_c>0')
     )
@@ -142,7 +142,4 @@ def test_filename2user():
 
 
 if __name__ == '__main__':
-    import time
-    start = time.time()
     transport_db_to_json_parallel()
-    print(time.time() - start)
