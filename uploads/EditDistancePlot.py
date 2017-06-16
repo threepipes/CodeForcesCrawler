@@ -46,7 +46,7 @@ def collect_statistics(data_list: list):
     """
     data_class = {}
     for stype in stat_types:
-        data_class[stype] = [{'label': '-%d' % r, 'data': []} for r in rating_split]
+        data_class[stype] = [{'label': 'to %d' % r, 'data': []} for r in rating_split]
     for user in data_list:
         for i, r in enumerate(rating_split):
             if user['rating'] >= r:
@@ -94,9 +94,9 @@ def normalize_dataset(prob_stat: dict, edb: EditDistanceStatisticsDB, group: str
     """
     for prob in edb.select():
         prob_id = prob['problem_id']
-        med = prob[group + '_median']
+        med = prob[group + '_mean']
         if med == 0:
-            med = 1
+            med = 0.001
         if prob_id not in prob_stat:
             continue
         for user in prob_stat[prob_id]:
@@ -145,7 +145,7 @@ class ScoreLabel:
 class AccLabel:
     def __init__(self):
         self.acc_split = [
-            0.15, 0.25, 0.35, 0.45, 0.55, 0.8, 1.0
+            0.2 * (x + 1) for x in range(5)
         ]
         self.acc_dict = self.get_acc_dict()
 
@@ -208,4 +208,6 @@ if __name__ == '__main__':
     from submissionHistoryDB import SubmissionHistoryDB
     groups = SubmissionHistoryDB.column[4:-1]
     print(groups)
-    Parallel(n_jobs=len(groups), verbose=5)(delayed(statistics_group)(g) for g in groups)
+    Parallel(n_jobs=len(groups)*2, verbose=5)(
+        delayed(statistics_group)(g) for g in groups
+    )
