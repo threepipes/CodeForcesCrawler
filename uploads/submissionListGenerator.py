@@ -60,3 +60,19 @@ def get_history_list(username: str, fdb: FileDB, prefix=''):
     filename_list = extract_filenames(history_list, prefix=prefix)
 
     return pid_list, filename_list
+
+
+def test_get_history_list():
+    user_name = 'yosei-san'
+    fdb = FileDB()
+    pid_list, file_list = get_history_list(user_name, fdb)
+    print(pid_list)
+    count = 0
+    for fd in file_list:
+        print(fd)
+        count += len(fd)
+    print(count)
+
+
+if __name__ == '__main__':
+    test_get_history_list()
