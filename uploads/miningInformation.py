@@ -204,9 +204,10 @@ def get_recent_sources(username, n=inf, time_from=0, time_end=time_inf):
     return source
 
 
+our_beginning_of_mining = 1479181649
 def mining_submission():
     user_list = user_db.select()
-    now = int(datetime.now().timestamp())
+    now = our_beginning_of_mining # int(datetime.now().timestamp())
     time_from = now - 180 * 24 * 60 * 60
     for i, user in enumerate(user_list):
         name = user['user_name']

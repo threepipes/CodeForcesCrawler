@@ -6,7 +6,7 @@ import SleepTimer
 
 
 timer = None
-save_dir = './src/'
+save_dir = '../data/src/'
 
 
 def get_source(url):
