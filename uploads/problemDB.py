@@ -31,11 +31,11 @@ class ProblemStatDB(Database):
         'filesize_mean',
         'filesize_median',
         'filesize_variance',
-        'filesize_max_c',
-        'filesize_min_c',
-        'filesize_mean_c',
-        'filesize_median_c',
-        'filesize_variance_c',
+        'filesize_max_competition',
+        'filesize_min_competition',
+        'filesize_mean_competition',
+        'filesize_median_competition',
+        'filesize_variance_competition',
     ]
     data_table = {
         key: 'VARCHAR(20)',
@@ -44,11 +44,11 @@ class ProblemStatDB(Database):
         'filesize_mean': 'DOUBLE',
         'filesize_median': 'INT',
         'filesize_variance': 'DOUBLE',
-        'filesize_max_c': 'INT',
-        'filesize_min_c': 'INT',
-        'filesize_mean_c': 'DOUBLE',
-        'filesize_median_c': 'INT',
-        'filesize_variance_c': 'DOUBLE',
+        'filesize_max_competition': 'INT',
+        'filesize_min_competition': 'INT',
+        'filesize_mean_competition': 'DOUBLE',
+        'filesize_median_competition': 'INT',
+        'filesize_variance_competition': 'DOUBLE',
     }
 
     def __init__(self):

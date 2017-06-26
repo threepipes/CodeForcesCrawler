@@ -3,6 +3,7 @@ import json
 
 import numpy as np
 from joblib import Parallel, delayed
+from scipy.stats import pearsonr
 
 from boxplot import boxplot
 from DistanceAnalyzer import rating_split, stat_types, stat_method
@@ -10,6 +11,74 @@ from DistanceAnalyzer import rating_split, stat_types, stat_method
 from acceptanceDB import AcceptanceDB
 from problemDB import ProblemDB
 from EditDistanceStatistics import EditDistanceStatisticsDB
+from statistics2D import barplot
+
+
+def set_correlation_data(info, corr_list, p_list, labels):
+    cols = ['diff', 'prob_div', 'norm', 'label']
+    data_path = './correlation/'
+
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
+    data_path += 'corr.csv'
+    print(info)
+
+    with open(data_path, 'a') as f:
+        for i, label in enumerate(labels):
+            row = ''
+            for col in cols:
+                row += info[col] + ','
+            row += label + ','
+            row += str(corr_list[i]) + ','
+            if p_list[i] < 0.05:
+                row += 'sgn'
+            f.write(row + '\n')
+
+
+def get_correlation(data_list, path, file_name, ylim=None, info=None):
+    """
+    data_list: [{rating: int, diffs: list}]
+    -> {
+        max: {x:[rating], y:[diff_max]},
+        min: {x:[rating], y:[diff_min]},
+        ...
+    }
+    に変換した後，相関係数を計算する
+    TODO 検定
+    TODO 散布図のplot
+    """
+    data_points = collect2points(data_list)
+    corr_list = []
+    p_list = []
+    if not os.path.exists(path):
+        os.makedirs(path)
+    for stype, data_list in data_points.items():
+        corr, p = pearsonr(data_list['x'], data_list['y'])
+        corr_list.append(corr)
+        p_list.append(p)
+    # if info:
+    #     set_correlation_data(info, corr_list, p_list, stat_types)
+    barplot(corr_list, stat_types, path + 'corr_' + file_name, ylim=(-1, 1))
+    barplot(p_list, stat_types, path + 'p_' + file_name, ylim=(0, 0.1))
+
+
+def collect2points(data_list: list):
+    """
+    data_list: [{rating: int, diffs: list}]
+    -> {
+        max: {x:[rating], y:[diff_max]},
+        min: {x:[rating], y:[diff_min]},
+        ...
+    }
+    """
+    data_class = {}
+    for stype in stat_types:
+        data_class[stype] = {'x': [], 'y': []}
+    for user in data_list:
+        for stype in stat_types:
+            data_class[stype]['x'].append(user['rating'])
+            data_class[stype]['y'].append(stat_method(stype, user['diffs']))
+    return data_class
 
 
 def plot_statistics(data_list, path, file_name, ylim=None):
@@ -163,11 +232,11 @@ class AccLabel:
         acc = self.acc_dict[pid]
         for border in self.acc_split:
             if acc <= border:
-                return border
+                return '%1.2f' % border
         return 1.0
 
 
-def plot_editdistance_statistics(label_matcher, prob_stat, save_path):
+def plot_editdistance_statistics(label_matcher, prob_stat, save_path, info=None):
     """
     problem_id -> labelに変換するmatcherを与える
     これに基づいて問題を分類し，分類ごとに統計データをplotする
@@ -182,7 +251,16 @@ def plot_editdistance_statistics(label_matcher, prob_stat, save_path):
         prob_stat_labeled[label] += stat
 
     for label, stat in prob_stat_labeled.items():
-        plot_statistics(stat, save_path, str(label) + '.png')
+        """
+        plot手法についてここで選択
+        現在:
+         - plot_statistics: boxplot
+         - get_correlation: 相関と検定
+        """
+        # plot_statistics(stat, save_path, str(label) + '.png')
+        if info:
+            info['label'] = str(label)
+        get_correlation(stat, save_path, str(label) + '.png', info=info)
 
 
 def editdistance_statistics(matcher, group, name):
@@ -193,10 +271,12 @@ def editdistance_statistics(matcher, group, name):
     edb = EditDistanceStatisticsDB()
     raw = 'raw/'
     norm = 'norm/'
+    info = {'diff': group, 'prob_div': name, 'norm': 'raw'}
     prob_stat = load_prob_stat(edb)
-    plot_editdistance_statistics(matcher, prob_stat, save_path + raw)
+    plot_editdistance_statistics(matcher, prob_stat, save_path + raw, info=info)
+    info['norm'] = 'norm'
     normalize_dataset(prob_stat, edb, group)
-    plot_editdistance_statistics(matcher, prob_stat, save_path + norm)
+    plot_editdistance_statistics(matcher, prob_stat, save_path + norm, info=info)
 
 
 def statistics_group(group: str):
@@ -207,7 +287,9 @@ def statistics_group(group: str):
 if __name__ == '__main__':
     from submissionHistoryDB import SubmissionHistoryDB
     groups = SubmissionHistoryDB.column[4:-1]
+    # for g in groups:
+    #     statistics_group(g)
     print(groups)
-    Parallel(n_jobs=len(groups)*2, verbose=5)(
+    Parallel(n_jobs=len(groups)*2, verbose=10)(
         delayed(statistics_group)(g) for g in groups
     )
