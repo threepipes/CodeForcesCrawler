@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 
+
 def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
     """
     data_list: 辞書リスト
@@ -10,13 +11,13 @@ def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
     title: 保存パス
           未指定なら保存しないで表示
     """
-    fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(7, 7))
+    fig.subplots_adjust(bottom=0.2)
     ax = fig.add_subplot(111)
     data = [d['data'] for d in data_list]
     label = [d['label'] for d in data_list]
     bp = ax.boxplot(data)
-    ax.set_xticklabels(label)
-    plt.title('boxplot')
+    ax.set_xticklabels(label, rotation=45)
     plt.grid()
     plt.ylabel(label_vh[0])
     plt.xlabel(label_vh[1])
@@ -32,6 +33,7 @@ def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
         plt.close()
     else:
         plt.show()
+
 
 def test():
     data = [

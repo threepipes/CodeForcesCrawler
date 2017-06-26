@@ -188,12 +188,12 @@ columns = [
     'rating',
 ]
 sub_column = [
-    'total_times_of_fix'# 修正回数合計
-    'each_fix_avarage', # 変更履歴1つに対する変更量の平均
-    'each_fix_max',     # 変更履歴1つに対する変更量の最大
-    'tried_prob',       # 挑戦した問題の合計
-    'prob_fix_average'  # 問題1つに対する変更量の平均
-    'prob_fix_max',     # 問題1つに対する変更量の最大
+    'total_times_of_fix',# 修正回数合計
+    'each_fix_avarage',  # 変更履歴1つに対する変更量の平均
+    'each_fix_max',      # 変更履歴1つに対する変更量の最大
+    'tried_prob',        # 挑戦した問題の合計
+    'prob_fix_average',  # 問題1つに対する変更量の平均
+    'prob_fix_max',      # 問題1つに対する変更量の最大
 ]
 def result_to_row(user_data, user_result):
     statistics = TotalStat()

@@ -93,9 +93,10 @@ def plot_statistics(data_list, path, file_name, ylim=None):
         save_path = path + stype + '/'
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+        print('saving : ' + path)
         boxplot(
             data_list,
-            label_vh=('edit distance', 'rating'),
+            label_vh=('Normalized Levenshtein Distance', 'Rating'),
             ylim=ylim,
             path=save_path + file_name
         )
@@ -113,9 +114,13 @@ def collect_statistics(data_list: list):
     内部のリストは，さらにレーティングによって分類されており，
     ラベルがレーティング帯を表す
     """
+    rating_label = [
+        '0 - 1100', '1101 - 1200', '1201 - 1300', '1301 - 1400', '1401 - 1500',
+        '1501 - 1600', '1601 - 1700', '1701 - 1900', '1901 - 2200', '2200 - 4000'
+    ]
     data_class = {}
     for stype in stat_types:
-        data_class[stype] = [{'label': 'to %d' % r, 'data': []} for r in rating_split]
+        data_class[stype] = [{'label': r, 'data': []} for r in rating_label]
     for user in data_list:
         for i, r in enumerate(rating_split):
             if user['rating'] >= r:
@@ -257,10 +262,10 @@ def plot_editdistance_statistics(label_matcher, prob_stat, save_path, info=None)
          - plot_statistics: boxplot
          - get_correlation: 相関と検定
         """
-        # plot_statistics(stat, save_path, str(label) + '.png')
-        if info:
-            info['label'] = str(label)
-        get_correlation(stat, save_path, str(label) + '.png', info=info)
+        plot_statistics(stat, save_path, str(label) + '.png')
+        # if info:
+        #     info['label'] = str(label)
+        # get_correlation(stat, save_path, str(label) + '.png', info=info)
 
 
 def editdistance_statistics(matcher, group, name):
@@ -273,7 +278,7 @@ def editdistance_statistics(matcher, group, name):
     norm = 'norm/'
     info = {'diff': group, 'prob_div': name, 'norm': 'raw'}
     prob_stat = load_prob_stat(edb)
-    plot_editdistance_statistics(matcher, prob_stat, save_path + raw, info=info)
+    # plot_editdistance_statistics(matcher, prob_stat, save_path + raw, info=info)
     info['norm'] = 'norm'
     normalize_dataset(prob_stat, edb, group)
     plot_editdistance_statistics(matcher, prob_stat, save_path + norm, info=info)
@@ -281,15 +286,16 @@ def editdistance_statistics(matcher, group, name):
 
 def statistics_group(group: str):
     editdistance_statistics(AccLabel(), group, 'acc')
-    editdistance_statistics(ScoreLabel(), group, 'score')
+    # editdistance_statistics(ScoreLabel(), group, 'score')
 
 
 if __name__ == '__main__':
     from submissionHistoryDB import SubmissionHistoryDB
     groups = SubmissionHistoryDB.column[4:-1]
+    statistics_group('levenshtein_distance')
     # for g in groups:
     #     statistics_group(g)
-    print(groups)
-    Parallel(n_jobs=len(groups)*2, verbose=10)(
-        delayed(statistics_group)(g) for g in groups
-    )
+    # print(groups)
+    # Parallel(n_jobs=len(groups)*2, verbose=10)(
+    #     delayed(statistics_group)(g) for g in groups
+    # )
