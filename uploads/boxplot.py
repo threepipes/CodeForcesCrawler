@@ -35,6 +35,47 @@ def boxplot(data_list, label_vh=('', ''), ylim=None, path=None):
         plt.show()
 
 
+def set_plot():
+    fig = plt.figure(figsize=(14, 7))
+    fig.subplots_adjust(bottom=0.2)
+    return fig
+
+
+def addplot(data_list, pos, fig, label_vh=('', ''), ylim=None):
+    """
+    data_list: 辞書リスト
+    {'label':'<label>', 'data':[data]}
+    label_vh: タプルで縦横のラベル(縦, 横)
+    ylim: yの範囲をリストで[下限, 上限]
+          未指定なら[0, datamax]
+    title: 保存パス
+          未指定なら保存しないで表示
+    """
+    ax = fig.add_subplot(pos)
+    data = [d['data'] for d in data_list]
+    label = [d['label'] for d in data_list]
+    bp = ax.boxplot(data)
+    ax.set_xticklabels(label, rotation=45)
+    plt.grid()
+    plt.ylabel(label_vh[0])
+    plt.xlabel(label_vh[1])
+    if ylim:
+        plt.ylim(ylim)
+    else:
+        ylim_max = 0
+        for whisker in bp['whiskers']:
+            ylim_max = max(ylim_max, whisker.get_ydata()[1])
+        plt.ylim((0, ylim_max * 1.2))
+
+
+def draw(path):
+    if path:
+        plt.savefig(path)
+        plt.close()
+    else:
+        plt.show()
+
+
 def test():
     data = [
         {

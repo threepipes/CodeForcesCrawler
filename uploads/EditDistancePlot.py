@@ -5,7 +5,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from scipy.stats import pearsonr
 
-from boxplot import boxplot
+from boxplot import boxplot, addplot, draw, set_plot
 from DistanceAnalyzer import rating_split, stat_types, stat_method
 
 from acceptanceDB import AcceptanceDB
@@ -81,6 +81,32 @@ def collect2points(data_list: list):
     return data_class
 
 
+def plot_icsme(data_list, path, file_name, ylim=None):
+    """
+    data_list: [{rating: int, diffs: list}]
+    maxとmedでペアにしてsubplot
+    """
+    data_class = collect_statistics(data_list)
+    stype_list = [('med', 121), ('max', 122)]
+    fig = set_plot()
+    for stype, pos in stype_list:
+        data_list = data_class[stype]
+        for data in data_list:
+            print(data['label'], len(data['data']))
+        save_path = path + stype + '/'
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        print('saving : ' + save_path + file_name)
+        addplot(
+            data_list,
+            pos,
+            fig,
+            label_vh=('Normalized Levenshtein Distance', 'Rating'),
+            ylim=ylim,
+        )
+    draw('../data/icsme_plot.png')
+
+
 def plot_statistics(data_list, path, file_name, ylim=None):
     """
     data_list: [{rating: int, diffs: list}]
@@ -116,7 +142,7 @@ def collect_statistics(data_list: list):
     """
     rating_label = [
         '0 - 1100', '1101 - 1200', '1201 - 1300', '1301 - 1400', '1401 - 1500',
-        '1501 - 1600', '1601 - 1700', '1701 - 1900', '1901 - 2200', '2200 - 4000'
+        '1501 - 1600', '1601 - 1700', '1701 - 1900', '1901 - 2200', '2201 -      '
     ]
     data_class = {}
     for stype in stat_types:
@@ -262,7 +288,8 @@ def plot_editdistance_statistics(label_matcher, prob_stat, save_path, info=None)
          - plot_statistics: boxplot
          - get_correlation: 相関と検定
         """
-        plot_statistics(stat, save_path, str(label) + '.png')
+        if label == '0.40':
+            plot_icsme(stat, save_path, str(label) + '.png')
         # if info:
         #     info['label'] = str(label)
         # get_correlation(stat, save_path, str(label) + '.png', info=info)
