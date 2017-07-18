@@ -41,7 +41,7 @@ def set_plot():
     return fig
 
 
-def addplot(data_list, pos, fig, label_vh=('', ''), ylim=None):
+def addplot(data_list, pos, fig, title, label_vh=('', ''), ylim=None):
     """
     data_list: 辞書リスト
     {'label':'<label>', 'data':[data]}
@@ -56,6 +56,7 @@ def addplot(data_list, pos, fig, label_vh=('', ''), ylim=None):
     label = [d['label'] for d in data_list]
     bp = ax.boxplot(data)
     ax.set_xticklabels(label, rotation=45)
+    plt.title(title)
     plt.grid()
     plt.ylabel(label_vh[0])
     plt.xlabel(label_vh[1])

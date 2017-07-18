@@ -87,12 +87,14 @@ def plot_icsme(data_list, path, file_name, ylim=None):
     maxとmedでペアにしてsubplot
     """
     data_class = collect_statistics(data_list)
-    stype_list = [('med', 121), ('max', 122)]
+    stype_list = [('max', 121, '(a) Maximum of LD values'), ('med', 122, '(b) Median of LD values')]
     fig = set_plot()
-    for stype, pos in stype_list:
+    for stype, pos, title in stype_list:
         data_list = data_class[stype]
+        sum_val = 0
         for data in data_list:
-            print(data['label'], len(data['data']))
+            sum_val += len(data['data'])
+        print(sum_val)
         save_path = path + stype + '/'
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -101,6 +103,7 @@ def plot_icsme(data_list, path, file_name, ylim=None):
             data_list,
             pos,
             fig,
+            title,
             label_vh=('Normalized Levenshtein Distance', 'Rating'),
             ylim=ylim,
         )
