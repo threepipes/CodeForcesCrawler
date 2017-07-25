@@ -161,7 +161,6 @@ def init_db():
     UserDB, FileDB, sourceから
     SubmissionHistoryDBを構成する
     """
-    import notification as nf
     udb = UserDB()
     fdb = FileDB()
     sdb = SubmissionHistoryDB()
@@ -170,8 +169,6 @@ def init_db():
     for i, user in enumerate(udb.select()):
         print(user['user_name'], i)
         store_user_statistics(user['user_name'], fdb, analyzer, sdb)
-        if (i + 1) % 1000 == 0:
-            nf.slack('submission history: reach ' + str(i + 1))
 
 
 if __name__ == '__main__':
