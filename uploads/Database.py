@@ -52,3 +52,11 @@ class Database:
 
     def drop(self):
         self.con.dropTable(self.table_name)
+
+    def get_dict(self, force_generate=False):
+        if not force and self.result:
+            return self.result
+        self.result = {}
+        for data in self.select():
+            self.result[data[self.key]] = data
+        return self.result

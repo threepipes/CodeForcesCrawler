@@ -59,5 +59,12 @@ def distribution_plot():
     plt.close()
 
 
+def generate_acc_dict(adb: AcceptanceDB):
+    acc_dic = {}
+    for data in adb.select():
+        acc_dic[data['problem_id']] = data
+    return acc_dic
+
+
 if __name__ == '__main__':
     distribution_plot()
