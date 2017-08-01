@@ -66,7 +66,7 @@ class Connector:
         self.cur.execute(statement)
         return self.cur.fetchall()
 
-    def get(self, table, col, where=None, limit=-1):
+    def get(self, table, col, distinct=False, where=None, limit=-1):
         self.connector.commit()
         where_sentence = ''
         limit_sentence = ''
@@ -79,7 +79,13 @@ class Connector:
                 where_sentence = ' WHERE ' + ' and '.join(where)
             elif isinstance(where, str):
                 where_sentence = ' WHERE ' + where
-        sentence = 'SELECT %s FROM %s%s%s' % (','.join(col), table, where_sentence, limit_sentence)
+        distinct_str = ''
+        if distinct:
+            distinct_str = 'DISTINCT '
+        sentence = 'SELECT %s%s FROM %s%s%s' % (
+            distinct_str, ','.join(col),
+            table, where_sentence, limit_sentence
+        )
         self.cur.execute(sentence)
         # result = self.cur.fetchall()
         # res = []

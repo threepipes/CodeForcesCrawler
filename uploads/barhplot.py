@@ -39,7 +39,7 @@ def barh_plot_m2(multiset2: dict, bar_order: list, title='sample', path=None):
             left=y_sum, align='center'
         )
         y_sum += y_data
-    ax.set_yticklabels(tags)
+    plt.yticks(x, tags)
     plt.title(title)
 
     if path:
