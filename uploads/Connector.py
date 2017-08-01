@@ -72,7 +72,7 @@ class Connector:
         limit_sentence = ''
         if limit > 0:
             limit_sentence = ' LIMIT ' + str(limit)
-        if not where is None:
+        if where is not None:
             if isinstance(where, dict):
                 where_sentence = ' WHERE ' + mapToStr(where, separator=' and ')
             elif isinstance(where, list):
@@ -81,9 +81,9 @@ class Connector:
                 where_sentence = ' WHERE ' + where
         sentence = 'SELECT %s FROM %s%s%s' % (','.join(col), table, where_sentence, limit_sentence)
         self.cur.execute(sentence)
-        result = self.cur.fetchall()
+        # result = self.cur.fetchall()
         # res = []
-        for row in result:
+        for row in self.cur.fetchall():
             mp = {}
             for key, value in zip(col, row):
                 mp[key] = value

@@ -102,18 +102,24 @@ def set_problem_id():
     fdb = FileDB()
     pre_filename = ''
     pre_pid = ''
-    for i, data in enumerate(mdb.select()):
-        if (i + 1) % 1000 == 0:
-            print(i + 1)
-            mdb.commit()
-        file_name = data['file_name']
-        if file_name == pre_filename:
-            prob_id = pre_pid
-        else:
-            pre_filename = file_name
-            prob_id = fdb.select(where={'file_name': file_name})
-            pre_pid = prob_id
-        mdb.update(data['idx'], {'problem_id': prob_id})
+    udb = UserDB()
+    for user in udb.select():
+        user_name = user['user_name']
+        print(user_name)
+        for data in mdb.select(where={'user_name': user_name}):
+            file_name = data['file_name']
+            if file_name == pre_filename:
+                prob_id = pre_pid
+            else:
+                pre_filename = file_name
+                for file_data in fdb.select(where={'file_name': file_name}):
+                    prob_id = file_data['problem_id']
+                    break
+                pre_pid = prob_id
+            if prob_id is None:
+                prob_id = '-'
+            mdb.update(data['idx'], {'problem_id': prob_id})
+        mdb.commit()
 
 
 def create_modification_db():
@@ -143,4 +149,4 @@ def create_modification_db():
 
 
 if __name__ == '__main__':
-    create_modification_db()
+    set_problem_id()

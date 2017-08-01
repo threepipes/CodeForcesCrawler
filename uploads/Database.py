@@ -10,6 +10,7 @@ class Database:
         self.column = column
         self.data_table = data_table
         self.con = Connector()
+        self.result = None
 
     def init_table(self, drop=False):
         self.con.createTable(
@@ -54,7 +55,7 @@ class Database:
         self.con.dropTable(self.table_name)
 
     def get_dict(self, force_generate=False):
-        if not force and self.result:
+        if not force_generate and self.result:
             return self.result
         self.result = {}
         for data in self.select():

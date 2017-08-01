@@ -5,62 +5,43 @@ from problemDB import ProblemDB
 from DistanceAnalyzer import rating_split
 
 
-class FixClassifier:
-    t_user = 'user'
-    t_prob = 'prob'
-    t_tag = 'tag'
-    t_type = 'type'
+user_div = 'user'
+problem_div = 'prob'
+tag_div = 'tag'
+type_div = 'type'
 
-    def __init__(
-            self,
-            user_clsf=DefaultClassifier(),
-            prob_clsf=DefaultClassifier(),
-            tag_clsf=DefaultClassifier(),
-            type_clsf=DefaultClassifier()
-            ):
-        self.user_clsf = user_clsf
-        self.prob_clsf = prob_clsf
-        self.tag_clsf = tag_clsf
-        self.type_clsf = type_clsf
+
+class DataClassifier:
+    name = 'default'
+    clsf_type_name = 'all'
+
+    def clsf_type(self):
+        return self.clsf_type_name
+
+    def __call__(self):
+        raise NotImplementedError()
+
+    def __str__(self):
+        return self.name
+
+
+class FixClassifier:
+    def __init__(self, classifier_list: list):
+        self.classifier_list = classifier_list
 
     def classifier_name(self, splitter='_'):
-        result = splitter.join([
-            self.user_clsf.name,
-            self.prob_clsf.name,
-            self.tag_clsf.name,
-            self.type_clsf.name
-        ])
-        return result
+        return splitter.join(self.classifier_list)
 
-    def classifier(self, fix_data):
-        _user = self._user_clsf(fix_data)
-        _prob = self._prob_clsf(fix_data)
-        _tag = self._tag_clsf(fix_data)
-        _type = self._type_clsf(fix_data)
-        result = {
-            self.t_user: _user,
-            self.t_prob: _prob,
-            self.t_tag: _tag,
-            self.t_type: _type,
-            'data': fix_data
-        }
-        return result, ('%s_%s_%s_%s' % (_user, _prob, _tag, _type))
-
-    def _user_clsf(self, fix_data):
-        return self.user_clsf(fix_data)
-
-    def _prob_clsf(self, fix_data):
-        return self.prob_clsf(fix_data)
-
-    def _tag_clsf(self, fix_data):
-        return self.tag_clsf(fix_data)
-
-    def _type_clsf(self, fix_data):
-        return self.type_clsf(fix_data)
+    def __call__(self, fix_data):
+        result = {'data': fix_data}
+        for csf in self.classifier_list:
+            result[csf.clsf_type()] = csf(fix_data)
+        return result, '_'.join(map(str, self.classifier_list))
 
 
-class UserRatingClassifier:
+class UserRatingClassifier(DataClassifier):
     name = 'uRating'
+    clsf_type_name = user_div
     rating_div = rating_split
 
     def __init__(self, udb: UserDB):
@@ -79,15 +60,9 @@ class UserRatingClassifier:
         return 'none'
 
 
-class DefaultClassifier:
-    name = 'd'
-
-    def __call__(self, fix_data):
-        return 'all'
-
-
-class ProbAccClassifier:
+class ProbAccClassifier(DataClassifier):
     name = 'probAcc'
+    clsf_type_name = problem_div
 
     def __init__(self, adb: AcceptanceDB):
         self.acc_dict = adb.get_dict()
@@ -105,8 +80,9 @@ class ProbAccClassifier:
         return '1.00'
 
 
-class ProbPointClassifier:
+class ProbPointClassifier(DataClassifier):
     name = 'probPoint'
+    clsf_type_name = problem_div
 
     def __init__(self, pdb: ProblemDB):
         self.prob_dict = pdb.get_dict()
@@ -123,22 +99,25 @@ class ProbPointClassifier:
         return str(point)
 
 
-class TagSelfClassifier:
+class TagSelfClassifier(DataClassifier):
     name = 'tagSelf'
+    clsf_type_name = tag_div
 
     def __call__(self, fix_data):
         return fix_data['node_type']
 
 
-class TagParentClassifier:
+class TagParentClassifier(DataClassifier):
     name = 'tagPar'
+    clsf_type_name = tag_div
 
     def __call__(self, fix_data):
         return fix_data['parent_type']
 
 
-class ModificationTypeClassifier:
+class ModificationTypeClassifier(DataClassifier):
     name = 'mod'
+    clsf_type_name = type_div
 
     def __call__(self, fix_data):
         return fix_data['modification_type']
