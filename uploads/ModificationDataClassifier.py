@@ -13,13 +13,15 @@ type_div = 'type'
 
 class DataClassifier:
     name = 'default'
-    clsf_type_name = 'all'
+
+    def __init__(self, clsf_type_name: str):
+        self.clsf_type_name = clsf_type_name
 
     def clsf_type(self):
         return self.clsf_type_name
 
-    def __call__(self):
-        raise NotImplementedError()
+    def __call__(self, fix_data):
+        return 'all'
 
     def __str__(self):
         return self.name
@@ -41,10 +43,10 @@ class FixClassifier:
 
 class UserRatingClassifier(DataClassifier):
     name = 'uRating'
-    clsf_type_name = user_div
     rating_div = rating_split
 
     def __init__(self, udb: UserDB):
+        super().__init__(user_div)
         self.user_dict = udb.get_dict()
 
     def __call__(self, fix_data):
@@ -62,9 +64,9 @@ class UserRatingClassifier(DataClassifier):
 
 class ProbAccClassifier(DataClassifier):
     name = 'probAcc'
-    clsf_type_name = problem_div
 
     def __init__(self, adb: AcceptanceDB):
+        super().__init__(problem_div)
         self.acc_dict = adb.get_dict()
 
     def __call__(self, fix_data):
@@ -82,9 +84,9 @@ class ProbAccClassifier(DataClassifier):
 
 class ProbPointClassifier(DataClassifier):
     name = 'probPoint'
-    clsf_type_name = problem_div
 
     def __init__(self, pdb: ProblemDB):
+        super().__init__(problem_div)
         self.prob_dict = pdb.get_dict()
 
     def __call__(self, fix_data):
@@ -101,7 +103,9 @@ class ProbPointClassifier(DataClassifier):
 
 class TagSelfClassifier(DataClassifier):
     name = 'tagSelf'
-    clsf_type_name = tag_div
+
+    def __init__(self):
+        super().__init__(tag_div)
 
     def __call__(self, fix_data):
         return fix_data['node_type']
@@ -109,7 +113,9 @@ class TagSelfClassifier(DataClassifier):
 
 class TagParentClassifier(DataClassifier):
     name = 'tagPar'
-    clsf_type_name = tag_div
+
+    def __init__(self):
+        super().__init__(tag_div)
 
     def __call__(self, fix_data):
         return fix_data['parent_type']
@@ -117,7 +123,9 @@ class TagParentClassifier(DataClassifier):
 
 class ModificationTypeClassifier(DataClassifier):
     name = 'mod'
-    clsf_type_name = type_div
+
+    def __init__(self):
+        super().__init__(type_div)
 
     def __call__(self, fix_data):
         return fix_data['modification_type']
