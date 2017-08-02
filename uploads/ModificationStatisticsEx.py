@@ -12,6 +12,8 @@ from barhplot import barh_plot_m2
 
 
 def add_multiset(multiset: dict, data: str):
+    if data is None:
+        return
     if data not in multiset:
         multiset[data] = 0
     multiset[data] += 1
@@ -177,16 +179,26 @@ def parallel_collect():
     fixdata_list = Parallel(n_jobs=6, verbose=10)(
         delayed(collect_by_prob)(p) for p in prob_list
     )
+    # fixdata_list = []
+    # for prob_id in prob_list[1000:1002]:
+    #     fixdata_list.append(collect_by_prob(prob_id))
 
     ms_fixdata = {}
+    div_name_count = {}
     for fixdata_part, user_count in fixdata_list:
         for div_name, fixdata in fixdata_part.items():
+            if div_name is None:
+                continue
             if div_name not in ms_fixdata:
                 ms_fixdata[div_name] = {}
             add_multiset_deep_div(
                 ms_fixdata[div_name],
                 fixdata, user_count[div_name]
             )
+            add_multiset(div_name_count, div_name)
+
+    for div_name, ms in ms_fixdata.items():
+        div_multiset(ms, div_name_count[div_name])
 
     return ms_fixdata
 
@@ -224,17 +236,22 @@ def build_mod_classifier_ex(adb: AcceptanceDB, udb: UserDB):
 
 
 def save_collect_data(name, data_dict):
-    with open('stat_fix_data_norm/%s.json' % name) as f:
+    with open('stat_fix_data_norm/%s.json' % name, 'w') as f:
         json.dump(data_dict, f)
 
 
 def collect_plot_prob_fix():
     data = parallel_collect()
 
+    mdb = ModificationDB()
+    tag_list = [fix['node_type'] for fix in mdb.select(
+        col=['node_type'], distinct=True
+    )]
+
     for name, data_dict in data.items():
         print(name)
         barh_plot_m2(
-            data_dict, get_type_order(),
+            data_dict, get_type_order(), tag_list,
             title=name, path=('plot_fix_data_norm/%s.png' % name)
         )
         save_collect_data(name, data_dict)

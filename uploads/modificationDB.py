@@ -148,5 +148,16 @@ def create_modification_db():
             f.write(err + '\n')
 
 
+def all_tags():
+    mdb = ModificationDB()
+    tag_list = [fix['node_type'] for fix in mdb.select(
+        col=['node_type'], distinct=True
+    )]
+    with open('tag_list.txt', 'w') as f:
+        for tag in tag_list:
+            f.write(tag + '\n')
+            print(tag)
+
+
 if __name__ == '__main__':
-    set_problem_id()
+    all_tags()
