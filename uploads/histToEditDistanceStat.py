@@ -5,15 +5,14 @@ SubmissionHistoryDBの各列をEditDistancePlot#loadで読み込める形式に�
 import json
 import os
 
+from database.fileDB_util import get_file
 from joblib import Parallel, delayed
+from database.problemDB import ProblemStatDB
+from database.userDB import UserDB
 
-from fileDB import FileDB
-from userDB import UserDB
-from problemDB import ProblemDB, ProblemStatDB
-from submissionHistoryDB import SubmissionHistoryDB
-
-from userDB_util import get_user
-from fileDB_util import get_file
+from database.fileDB import FileDB
+from database.submissionHistoryDB import SubmissionHistoryDB
+from database.userDB_util import get_user
 
 lang_list = ['GNU C++14', 'GNU C++11', 'GNU C++']
 lang_select = '(%s)' % ' or '.join(['lang=' + lang for lang in lang_list])

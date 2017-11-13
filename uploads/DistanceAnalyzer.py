@@ -1,15 +1,16 @@
-import os
 import json
-import copy
+import os
 import time
 from subprocess import *
-from fileDB import FileDB
-from userDB import UserDB
-from acceptanceDB import AcceptanceDB
-from problemDB import ProblemStatDB
 
-import boxplot as bp
 import numpy as np
+
+from database.acceptanceDB import AcceptanceDB
+from database.fileDB import FileDB
+from database.problemDB import ProblemStatDB
+from database.userDB import UserDB
+from plot_util import boxplot as bp
+from util.data import rating_split
 
 
 class LevelStat:
@@ -394,9 +395,8 @@ med: 小さすぎて不明 -> 100以上除外
 - 個人ごと平均をとり，その中での中央値 -> 複雑にしすぎでは？
 下では全要素の中央値: 十分submitが行われていれば，偏りはない
 """
-rating_split = [
-    1100, 1200, 1300, 1400, 1500, 1600, 1700, 1900, 2200, 9999
-]
+
+
 def boxplot_dist():
     udb = UserDB()
     user_list = udb.select(col=['user_name', 'rating'])

@@ -1,18 +1,15 @@
-import requests as req
-import time
 import sys
 from datetime import datetime, timedelta
+
+import requests as req
 from pyquery import PyQuery as pq
 
-
-from userDB import UserDB, UserSubmissionDB
-from acceptanceDB import AcceptanceDB
-from contestDB import ContestDB, set_participants, mining_contest
-from fileDB import FileDB
-from problemDB import ProblemDB
-from SleepTimer import SleepTimer
-
-
+from database.acceptanceDB import AcceptanceDB
+from database.contestDB import ContestDB, mining_contest
+from database.fileDB import FileDB
+from database.problemDB import ProblemDB
+from database.userDB import UserDB, UserSubmissionDB
+from util.SleepTimer import SleepTimer
 
 base_url = 'http://codeforces.com/'
 
@@ -68,7 +65,6 @@ def init_all():
 
 
 def access_api(api, option={}):
-    base_url = 'http://codeforces.com/'
     url = base_url + 'api/'
     timer.sleep(0.4)
     request = req.get(url+api, params=option)
@@ -206,7 +202,7 @@ def get_recent_sources(username, n=inf, time_from=0, time_end=time_inf):
 
 our_beginning_of_mining = 1479181649
 def mining_submission():
-    user_list = user_db.select()
+    user_list = list(user_db.select())
     now = our_beginning_of_mining # int(datetime.now().timestamp())
     time_from = now - 180 * 24 * 60 * 60
     for i, user in enumerate(user_list):

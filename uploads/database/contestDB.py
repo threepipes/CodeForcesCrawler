@@ -1,7 +1,9 @@
-from Database import Database
-import requests as req
 from datetime import datetime
-from SleepTimer import SleepTimer
+
+import requests as req
+
+from database.Database import Database
+from util.SleepTimer import SleepTimer
 
 
 class ContestDB(Database):

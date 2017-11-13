@@ -1,4 +1,4 @@
-from Database import Database
+from database.Database import Database
 
 
 class ProblemDB(Database):

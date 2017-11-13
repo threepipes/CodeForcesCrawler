@@ -1,8 +1,10 @@
 import os.path
+
 import numpy as np
 
-from problemDB import ProblemDB, ProblemStatDB
-from fileDB import FileDB
+from database.fileDB import FileDB
+from database.problemDB import ProblemDB, ProblemStatDB
+
 
 def init_prob_stat():
     psdb = ProblemStatDB()

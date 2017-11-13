@@ -1,6 +1,5 @@
-from Connector import Connector
-from Database import Database
-from fileDB import FileDB
+from database.Database import Database
+from database.fileDB import FileDB
 
 
 class UserDB(Database):

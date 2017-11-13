@@ -1,8 +1,10 @@
 import os
 import shutil
 from datetime import timedelta
-from Database import Database
-from contestDB import ContestDB
+
+from database.contestDB import ContestDB
+
+from database.Database import Database
 
 
 class FileDB(Database):

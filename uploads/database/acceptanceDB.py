@@ -1,6 +1,7 @@
 import os
-from Database import Database
-import csv
+
+from database.Database import Database
+
 
 class AcceptanceDB(Database):
     table_name = 'Acceptance'

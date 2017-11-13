@@ -1,4 +1,4 @@
-from fileDB import FileDB
+from database.fileDB import FileDB
 
 
 def list_to_where(col, val_list):

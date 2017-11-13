@@ -1,4 +1,4 @@
-from Connector import Connector
+from database.Connector import Connector
 
 
 class Database:

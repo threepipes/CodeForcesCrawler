@@ -1,9 +1,7 @@
-from userDB import UserDB
-from acceptanceDB import AcceptanceDB
-from problemDB import ProblemDB
-
-from DistanceAnalyzer import rating_split
-
+from database.acceptanceDB import AcceptanceDB
+from database.problemDB import ProblemDB
+from database.userDB import UserDB
+from util.data import rating_split
 
 user_div = 'user'
 problem_div = 'prob'

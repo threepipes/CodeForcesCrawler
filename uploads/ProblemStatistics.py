@@ -3,12 +3,12 @@
 例: 問題の平均ファイルサイズと平均編集距離の相関
 """
 
+from database.Database import Database
 from matplotlib import pyplot as plt
+from database.problemDB import ProblemDB, ProblemStatDB
 
-from Database import Database
 from EditDistanceStatistics import EditDistanceStatisticsDB
-from acceptanceDB import AcceptanceDB
-from problemDB import ProblemDB, ProblemStatDB
+from database.acceptanceDB import AcceptanceDB
 
 
 def update_info(prob_info: dict, db: Database, filtering=None):

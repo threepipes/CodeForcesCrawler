@@ -2,13 +2,13 @@ import os
 import sys
 
 import numpy as np
-from sklearn.manifold import MDS
 from matplotlib import pyplot as plt
+from sklearn.manifold import MDS
+from database.userDB import UserSubmissionDB
 
 from Analyzer import Analyzer, AcceptedSubmissionFilter
 from FileChooser import FileChooser
-from userDB import UserSubmissionDB
-from acceptanceDB import AcceptanceDB
+from database.acceptanceDB import AcceptanceDB
 
 colors = [
     ((120/255, 120/255, 120/255), 1200/2500),

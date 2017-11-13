@@ -1,18 +1,15 @@
-from subprocess import *
-import random
 import json
-import sys
 import os
 import shutil
-from fileDB import FileDB
-from userDB import UserDB
-from problemDB import ProblemDB
-from acceptanceDB import AcceptanceDB
+from subprocess import *
 
 import numpy as np
-from sklearn.manifold import MDS
 from matplotlib import pyplot as plt
+from sklearn.manifold import MDS
+from database.userDB import UserDB
 
+from database.acceptanceDB import AcceptanceDB
+from database.fileDB import FileDB
 
 base_dir = os.path.abspath('../data/extracted/')
 jar_path = 'analyze.jar'

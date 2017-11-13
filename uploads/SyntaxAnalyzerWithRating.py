@@ -1,5 +1,5 @@
 from SyntaxAnalyzer import SyntaxAnalyzer, colors
-from userDB import UserDB
+from database.userDB import UserDB
 
 class SyntaxAnalyzerWithRating(SyntaxAnalyzer):
     def __init__(self, plot_file, file_chooser, command_dict):

@@ -1,6 +1,7 @@
 import time
-from fileDB import FileDB
-from fileDB_util import base_selection
+
+from database.fileDB import FileDB
+from database.fileDB_util import base_selection
 
 lang_filter = set(['GNU C++14', 'GNU C++11', 'GNU C++'])
 

@@ -3,8 +3,7 @@ import re
 import subprocess
 from multiprocessing import Pool
 
-from fileDB import FileDB
-
+from database.fileDB import FileDB
 
 lang_list = [
     'GNU C++',

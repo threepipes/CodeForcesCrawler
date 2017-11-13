@@ -38,9 +38,9 @@ class Connector:
         tabledata = []
         for name, typename in data.items():
             tabledata.append(' %s %s' % (name, typename))
-        if not primary_key is None:
+        if primary_key is not None:
             tabledata.append(' PRIMARY KEY(%s)' % primary_key)
-        if not foreign_key is None:
+        if foreign_key is not None:
             cascade = 'ON DELETE CASCADE ON UPDATE CASCADE'
             for key, table in foreign_key.items():
                 tabledata.append(' FOREIGN KEY(%s) REFERENCES %s(%s) %s' % (key, table, key, cascade))
@@ -124,7 +124,7 @@ class Connector:
     def count(self, table, where=None):
         self.connector.commit()
         statement = 'SELECT COUNT(*) FROM ' + table
-        if not where is None:
+        if where is not None:
             condition = []
             for (key, value) in where.items():
                 condition.append("%s='%s'" % (key, value))

@@ -1,15 +1,9 @@
+import json
 import os
 
-import json
 import numpy as np
-from matplotlib import pyplot as plt
 
-from fileDB import FileDB
-from userDB import UserDB
-from DistanceAnalyzer import analyze_user
-from Database import Database
-from submissionHistoryDB import SubmissionHistoryDB
-
+from database.Database import Database
 
 col_list = [
     'levenshtein_distance',

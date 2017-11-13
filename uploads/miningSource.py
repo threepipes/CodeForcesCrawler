@@ -1,9 +1,10 @@
 import os
-from fileDB import FileDB
-from userDB import UserDB
-from pyquery import PyQuery as pq
-import SleepTimer
 
+from pyquery import PyQuery as pq
+
+from database.fileDB import FileDB
+from database.userDB import UserDB
+from util import SleepTimer
 
 timer = None
 save_dir = '../data/src/'

@@ -1,17 +1,16 @@
-import os
 import json
+import os
 
-import numpy as np
 from joblib import Parallel, delayed
 from scipy.stats import pearsonr
 
-from boxplot import boxplot
-from DistanceAnalyzer import rating_split, stat_types, stat_method
-
-from acceptanceDB import AcceptanceDB
-from problemDB import ProblemDB
+from DistanceAnalyzer import stat_types, stat_method
 from EditDistanceStatistics import EditDistanceStatisticsDB
+from database.acceptanceDB import AcceptanceDB
+from database.problemDB import ProblemDB
+from plot_util.boxplot import boxplot
 from statistics2D import barplot
+from util.data import rating_split
 
 
 def set_correlation_data(info, corr_list, p_list, labels):
@@ -285,7 +284,7 @@ def statistics_group(group: str):
 
 
 if __name__ == '__main__':
-    from submissionHistoryDB import SubmissionHistoryDB
+    from database.submissionHistoryDB import SubmissionHistoryDB
     groups = SubmissionHistoryDB.column[4:-1]
     # for g in groups:
     #     statistics_group(g)
